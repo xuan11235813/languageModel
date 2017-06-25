@@ -1,4 +1,4 @@
 #!/usr/bin/python
-import readData as data
+import Data as data
 
 a = data.ReadData()
