@@ -3,6 +3,13 @@ import sys
 import para
 import os
 
+class WordAndClass:
+	wordClass = -1
+	word = ''
+
+	def __init__(self, _word, _wordClass):
+		self.word = _word
+		self.wordClass = _wordClass
 
 
 class readData:
@@ -47,14 +54,17 @@ class readData:
 
 file = open('data/engClass', 'r')
 index  = 0
-lst = {}
+lst = []
 for line in file:
 	item = []
 	for word in line.split(" "):
 		item.append(word)
-	lst[item[0].rstrip()] = item[1].rstrip()
+	print(item)
+	wordAndClass = WordAndClass(item[0].rstrip(),item[2].rstrip())
+	lst.append(wordAndClass)
 	if index <= 10:
 		index += 1
 	else:
 		break
 
+print(lst.index(WordAndClass('very',57)))
