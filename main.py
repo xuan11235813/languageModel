@@ -1,4 +1,8 @@
 #!/usr/bin/python
 import Data as data
 
-a = data.ReadData()
+_data = data.ReadData()
+
+if _data.checkStatus() == 0:
+else:
+	

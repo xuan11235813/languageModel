@@ -130,8 +130,3 @@ class ReadData:
 		else:
 			return 1
 
-
-
-
-
-
