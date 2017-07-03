@@ -1,6 +1,6 @@
 import random
 
-class BaumWelch:
+class ForwardBackward:
 
 	stateNum = 0
 	tranProb = []
