@@ -15,3 +15,12 @@ class Para:
 
 	#for lexicon neural network
 	
+
+	lexiconSourceWindowSize = 5
+	lexiconTargetWindowSize = 3
+
+
+	def GetLexiconSourceWindowSize(self):
+		return self.lexiconSourceWindowSize
+	def GetLexiconTargetWindowSize(self):
+		return self.lexiconTargetWindowSize

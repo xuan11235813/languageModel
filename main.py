@@ -9,6 +9,8 @@ if _data.checkStatus() == 0:
 		batchStatus = _data.refreshNewBatch()
 		if batchStatus == 1:
 			break
+		else:
+			
 
 	
 else:

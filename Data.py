@@ -177,6 +177,12 @@ class ReadData:
 			print("training files do not exist")
 			self.alert += 1
 		return batchReady
+	def findSampleLexicon(self, _sourceIndex, _targetIndex, _sentenceIndex):
+		parameters = para.Para()
+		sourceWindow = parameters.GetLexiconSourceWindowSize();
+		targetWindow = parameters.GetLexiconTargetWindowSize();
+
+		
 
 	def checkStatus(self):
 		if self.alert == 0:
