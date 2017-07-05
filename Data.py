@@ -24,6 +24,8 @@ class ReadData:
 	targetVocab = []
 	targetClass = []
 	trainingSentence = []
+	trainFile = file
+	trainFileCurrentPosition  = 0
 
 	# for any unsafe manipulate
 	alert = 0
@@ -43,13 +45,13 @@ class ReadData:
 		self.readTargetDictionaryClass(self.targetVocabFilePath)
 
 		self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTrainingDataFilePath())
-		self.readTrainData(self.trainingDataFilePath)
+		self.readTrainDataBatch(self.trainingDataFilePath)
 
 
 		if self.alert != 0 :
 			print('insufficient input data file')
 		else:
-			print('data ready')
+			print('vocabulary and first batch ready')
 	def findSourceVocabIndex( self, word ):
 		value = -1
 		try:
@@ -89,14 +91,15 @@ class ReadData:
 			print("target vocabulary files do not exist")
 			self.alert += 1
 
-	def readTrainData(self, filePath):
+	def readTrainDataBatch(self, filePath):
 		_allSource = 0
 		_allTarget = 0
 		sourceAbnormal = 0
 		targetAbnormal = 0
 		try:
-			file = open(filePath, "r")
-			for line in file:
+			self.trainFile = open(filePath, "r")
+			for index in range(128):
+				line = self.trainFile.readline()
 				item = []
 				sentencePair = SentencePair()
 				for sentence in line.split('#'):
@@ -118,11 +121,62 @@ class ReadData:
 					else:
 						targetAbnormal += 1
 				self.trainingSentence.append(sentencePair)
-			print('target training data with noise: ' + str(targetAbnormal/float(_allTarget)))
-			print('source training data with noise: ' + str(sourceAbnormal/float(_allSource)))
+			#print('target training data with noise: ' + str(targetAbnormal/float(_allTarget)))
+			#print('source training data with noise: ' + str(sourceAbnormal/float(_allSource)))
+			
+			self.trainFileCurrentPosition = self.trainFile.tell()
+
 		except IOError as err:
 			print("training files do not exist")
 			self.alert += 1
+
+	def refreshNewBatch(self):
+		_allSource = 0
+		_allTarget = 0
+		sourceAbnormal = 0
+		targetAbnormal = 0
+		batchReady = 0
+		del self.trainingSentence[:]
+		try:
+			self.trainFile = open(self.trainingDataFilePath, "r")
+			self.trainFile.seek(self.trainFileCurrentPosition, 0)
+
+			for index in range(128):
+				line = self.trainFile.readline()
+				if line == "":
+					batchReady = 1
+					break
+				item = []
+				sentencePair = SentencePair()
+				for sentence in line.split('#'):
+					item.append(sentence)
+				for word in item[0].rstrip().split(' '):
+					returnValue = self.findSourceVocabIndex(word)
+					_allSource += 1
+					if returnValue != -1:
+						sentencePair._source.append(returnValue)
+					else:
+						sourceAbnormal+= 1
+				for word in item[1].rstrip().split(' '):
+					returnValue = self.findTargetVocabIndexAndClass(word)
+					_allTarget += 1
+					if returnValue[0] != -1:
+						sentencePair._target.append(returnValue[0])
+						sentencePair._targetClass.append(returnValue[1])
+						
+					else:
+						targetAbnormal += 1
+				self.trainingSentence.append(sentencePair)
+			
+			self.trainFileCurrentPosition = self.trainFile.tell()
+			if len(self.trainingSentence) ==  128:
+				print('read a batch')
+			else:
+				print('read an incomplete batch')
+		except IOError as err:
+			print("training files do not exist")
+			self.alert += 1
+		return batchReady
 
 	def checkStatus(self):
 		if self.alert == 0:

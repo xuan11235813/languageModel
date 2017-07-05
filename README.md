@@ -21,9 +21,11 @@ for the following week to 09.07
 	input:  source index
 			target index
 	output: series with window
+	
 
 	2. add modify the Data.py so that can regenerate 128 sentences and continue read the file
-	toFollowingBatch()
+	refreshNewBatch()
+	# DONE at 05.07
 
 	3. add table lookup tensorflow variables to lexicon_neural_network.py so that it can produce the concatenate vector
 
