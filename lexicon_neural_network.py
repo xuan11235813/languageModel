@@ -7,7 +7,7 @@ n_input = 8
 
 #projection layer
 n_projection = 40680
-
+n_projection_output = 100
 #1st hidden layer
 n_hidden_1 = 800
 
@@ -18,32 +18,33 @@ n_hidden_2 = 500
 n_classes = 2000
 
 weights = {
-    'h1': tf.Variable(tf.random_normal([n_projection, n_hidden_1])),
-    'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
+    'projection': tf.Variable(tf.random_normal([n_projection, n_projection_output])),
+    'hidden': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
     'out': tf.Variable(tf.random_normal([n_hidden_2, n_classes]))
 }
 biases = {
-    'b1': tf.Variable(tf.random_normal([n_hidden_1])),
-    'b2': tf.Variable(tf.random_normal([n_hidden_2])),
+    'bHidden': tf.Variable(tf.random_normal([n_hidden_2])),
     'out': tf.Variable(tf.random_normal([n_classes]))
 }
 
 
-def multilayer_perceptron(x, weights, biases):
+def multilayer_perceptron(sourceTarget, weights, biases):
+
+    b = tf.Variable([], dtype = tf.float32)
+    for word in sourceTarget:
+        b = tf.concat([b,tf.gather(weights['projection'],word)],0)
+
     # Hidden layer with RELU activation
-    layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
+    layer_1 = tf.add(tf.matmul(b, weights['hidden']), biases['bHidden'])
     layer_1 = tf.nn.relu(layer_1)
     # Hidden layer with RELU activation
-    layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.nn.relu(layer_2)
+    out_layer = tf.add(tf.matmul(layer_1, weights['out']), biases['out'])
 
-    # Output layer with linear activation
-    out_layer = tf.matmul(layer_3, weights['out']) + biases['out']
     return out_layer
 
 
 
-x = tf.placeholder("float", [None, n_input])
+x = tf.placeholder("int", [None, n_input])
 y = tf.placeholder("float", [None, n_classes])
 
 
@@ -51,7 +52,7 @@ pred = multilayer_perceptron(x, weights, biases)
 
 # Define loss and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(-1 * cost)
 
 # Initializing the variables
 init = tf.global_variables_initializer()

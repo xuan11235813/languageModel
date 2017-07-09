@@ -10,6 +10,7 @@ if _data.checkStatus() == 0:
 		if batchStatus == 1:
 			break
 		else:
+			i = 0
 			
 
 	
