@@ -30,3 +30,21 @@ for the following week to 09.07
 	3. add table lookup tensorflow variables to lexicon_neural_network.py so that it can produce the concatenate vector
 
 	result: can run the network
+
+	Will be done in 9 days.
+
+	* lexicon_model:
+		- Class
+		- input Data, generate one table/array of f(ei|...) as emission probability stored in Data, function only output one table probability
+	* alignmenta_model:
+		- Class
+		- input Data, generate transition probabilities
+	* Process:
+		- Save gamma, 
+		- use gamma to update neural network, 
+		- generate the training data, 
+		- input data into nueral network model ,
+		- have two native neural network
+
+	Problem:
+		how to generate transition probabilities.
