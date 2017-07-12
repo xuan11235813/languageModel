@@ -32,6 +32,7 @@ class Para:
 			self.hiddenLayer2ndOutput = 500
 			self.outputLayerClassOutput = 2000
 			self.outputLayerWordOutput = 40680
+			self.learningRate = 0.02
 
 		def GetLexiconSourceWindowSize(self):			       	
 			return self.lexiconSourceWindowSize
@@ -47,8 +48,10 @@ class Para:
 		def GetHiddenLayer2nd(self):
 			return[self.hiddenLayer1stOutput, self.hiddenLayer2ndOutput]
 		def GetClassLayer(self):
-			return [hiddenLayer2ndOutput, outputLayerClassOutput]
+			return [self.hiddenLayer2ndOutput, self.outputLayerClassOutput]
 		def GetWordOutputLayer(self):
-			return [hiddenLayer2ndOutput, outputLayerWordOutput]
+			return [self.hiddenLayer2ndOutput, self.outputLayerWordOutput]
 		def GetClassLabelSize(self):
-			return outputLayerClassOutput
+			return self.outputLayerClassOutput
+		def GetLearningRate(self):
+			return self.learningRate
