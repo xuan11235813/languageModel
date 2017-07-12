@@ -5,33 +5,26 @@ import os
 
 class SentencePair:
 
-	_source = []
-	_target = []
-	_targetClass = []
+	def __init__(self):
+		self._source = []
+		self._target = []
+		self._targetClass = []
 
 
 
 
 class ReadData:
-
-	# these parameters should be initialized at one place
-	sourceVocabFilePath = ""
-	targetVocabFilePath = ""
-	trainingDataFilePath = ""
-
-	# these are inner parameters
-	sourceVocab = []
-	targetVocab = []
-	targetClass = []
-	trainingSentence = []
-	trainFile = file
-	trainFileCurrentPosition  = 0
-
-	# for any unsafe manipulate
-	alert = 0
-
-
 	def __init__(self):
+		# these are inner parameters
+		self.sourceVocab = []
+		self.targetVocab = []
+		self.targetClass = []
+		self.trainingSentence = []
+		self.trainFile = file
+		self.trainFileCurrentPosition  = 0
+
+		# for any unsafe manipulate
+		self.alert = 0
 
 		# read the config file
 		parameters = para.Para()
