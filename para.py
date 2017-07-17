@@ -55,3 +55,36 @@ class Para:
 			return self.outputLayerClassOutput
 		def GetLearningRate(self):
 			return self.learningRate
+
+	#for lexicon neural network
+	class AlignmentNeuralNetwork:
+
+		def __init__(self):
+			self.alignmentSourceWindowSize = 5
+			self.alignmentTargetWindowSize = 3
+			self.projectionLayerInputDim = 40680
+			self.projectionLayerOutputDim = 200
+			self.hiddenLayer1stOutput = 1000
+			self.hiddenLayer2ndOutput = 500
+			self.outputLayerJumpOutput = 101
+			self.learningRate = 0.02
+
+		def GetLexiconSourceWindowSize(self):			       	
+			return self.alignmentSourceWindowSize
+		def GetLexiconTargetWindowSize(self):
+			return self.alignmentTargetWindowSize
+		def GetInputWordNum(self):
+			return self.alignmentSourceWindowSize + self.alignmentTargetWindowSize
+		def GetProjectionLayer(self):
+			return [self.projectionLayerInputDim, self.projectionLayerOutputDim]
+		def GetHiddenLayer1st(self):
+			inputNum = (self.alignmentTargetWindowSize + self.alignmentSourceWindowSize) * self.projectionLayerOutputDim
+			return [inputNum, self.hiddenLayer1stOutput]
+		def GetHiddenLayer2nd(self):
+			return[self.hiddenLayer1stOutput, self.hiddenLayer2ndOutput]
+		def GetJumpLayer(self):
+			return [self.hiddenLayer2ndOutput, self.outputLayerJumpOutput]
+		def GetJumpLabelSize(self):
+			return self.outputLayerJumpOutput
+		def GetLearningRate(self):
+			return self.learningRate
