@@ -7,9 +7,18 @@ x = [1,3,1]
 a1 = tf.Variable(tf.random_normal([5, 4]))
 a2 = tf.Variable(tf.random_normal([4, 3]))
 b = tf.Variable([], dtype = tf.float32)
+h = tf.Variable([], dtype = tf.float32)
+y = tf.Variable([2,2,2,2,2,2,4])
+y1 = tf.Variable([2,2,2],[3,3,3],[4,4,4])
+h1 = tf.placeholder(tf.float32, [None, 12])
+
 
 for word in x:
 	b = tf.concat([b,tf.gather(a1,word)],0)
+
+p = tf.unstack(y,None,0)
+hp = tf.gather(a1,y)
+h = tf.concat(tf.unstack(tf.gather(a1,y),None,0),0)
 #b1 = tf.gather(a, 0)
 #b2 = tf.gather(a, 2)
 #b3 = tf.gather(a, 3)
@@ -35,3 +44,8 @@ print(mt.fsum(array1))
 weight = {}
 weight['fuck'] = 8
 print(weight['fuck'])
+
+
+print(sess.run(y))
+print(sess.run(hp))
+print(sess.run(h))

@@ -1,4 +1,4 @@
-import tensorflow as tf
+
 class Para:
 	def __init__(self):
 		#for source data file

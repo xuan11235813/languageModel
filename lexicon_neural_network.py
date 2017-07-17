@@ -1,12 +1,13 @@
 import tensorflow as tf
 import para
-
+import math as mt
 class LexiconNet:
     def __init__(self):
         #parameter
         self.weights = {}
         self.biases = {}
         self.netPara = para.Para.LexiconNeuralNetwork()
+
 
         #network
         self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
@@ -21,34 +22,35 @@ class LexiconNet:
         self.sess = tf.Session()
         self.sequence = tf.placeholder(tf.int32, [None, self.netPara.GetInputWordNum()])
         self.probabilityClass = tf.placeholder("float", [None, self.netPara.GetClassLabelSize()])
-        self.pred = self.multilayer_perceptron(self.sequence)
-        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.probabilityClass))
-        self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(-1 * cost)
+        self.pred = self.multilayer_perceptron(self.sequence, self.netPara.GetInputWordNum())
+        self.calculatedProb = tf.nn.softmax(self.pred)
+        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probabilityClass,logits=self.pred))
+        self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(-1 * self.cost)
         self.init = tf.global_variables_initializer();
         
         #initialize
-        sess.run(init)
+        self.sess.run(self.init)
 
-    def multilayer_perceptron(self, sourceTarget):
-        concatVector = tf.Variable([], dtype = tf.float32)
-        i = tf.constant(0)
-        c = lambda i: tf.less(i, )
-        b = lambda i: tf.add(i, 1)
-        r = tf.while_loop(c, b, [i])
+    def multilayer_perceptron(self, sourceTarget, num):
 
-        for word in sourceTarget:
-            concatVector = tf.concat([concatVector,tf.gather(weights['projection'],word)],0)
-
-        hiddenLayer1 = tf.add(tf.matmul(concatVector, weights['hidden1']), biases['bHidden1'])
+        generateVector = tf.gather(self.weights['projection'], sourceTarget)
+        unstackVector = tf.unstack(generateVector, None, 1)
+        concatVector = tf.concat(unstackVector, 1)
+        hiddenLayer1 = tf.add(tf.matmul(concatVector, self.weights['hidden1']), self.biases['bHidden1'])
         hiddenLayer1 = tf.nn.relu(hiddenLayer1)
 
-        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, weights['hidden2']), biases['bHidden2'])
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
         hiddenLayer2 = tf.nn.relu(hiddenLayer2)
 
-        outClass = tf.add(tf.matmul(hiddenLayer2, weights['outClass']),biases['outClass'])
+        outClass = tf.add(tf.matmul(hiddenLayer2, self.weights['outClass']),self.biases['outClass'])
+        return outClass
+
+    def networkPrognose(self, sourceTarget):
+        out = self.sess.run(self.calculatedProb,feed_dict={self.sequence : sourceTarget})
+        print(out.sum())
 
     def trainingBatch(self, batch_sequence, batch_probabilityClass):
-        _, c = sess.run([optimizer, cost], feed_dict={self.sequence: batch_sequence,
+        _, c = sess.run([self.optimizer, self.cost], feed_dict={self.sequence: batch_sequence,
                                 self.probabilityClass: batch_probabilityClass})
         print(c)
 
