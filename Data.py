@@ -22,6 +22,12 @@ class ReadData:
 		self.trainingSentence = []
 		self.trainFile = file
 		self.trainFileCurrentPosition  = 0
+		self.targetWordClassSet = []
+
+		# initialize the target word class set
+		for i in range(2000):
+			item = []
+			self.targetWordClassSet.append(item)
 
 		# for any unsafe manipulate
 		self.alert = 0
@@ -40,6 +46,10 @@ class ReadData:
 		self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTrainingDataFilePath())
 		self.readTrainDataBatch(self.trainingDataFilePath)
 
+
+		for i in range(1999):
+			print('*************')
+			print(len(self.targetWordClassSet[i]))
 
 		if self.alert != 0 :
 			print('insufficient input data file')
@@ -79,6 +89,7 @@ class ReadData:
 				for word in line.split(" "):
 					item.append(word)
 				self.targetVocab.append(item[0].rstrip())
+				self.targetWordClassSet[int(item[2].rstrip())].append(item[0].rstrip())
 				self.targetClass.append(item[2].rstrip())
 		except IOError as err:
 			print("target vocabulary files do not exist")
@@ -170,10 +181,6 @@ class ReadData:
 			print("training files do not exist")
 			self.alert += 1
 		return batchReady
-	def findSampleLexicon(self, _sourceIndex, _targetIndex, _sentenceIndex):
-		parameters = para.Para()
-		sourceWindow = parameters.GetLexiconSourceWindowSize();
-		targetWindow = parameters.GetLexiconTargetWindowSize();
 
 		
 

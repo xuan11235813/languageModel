@@ -49,3 +49,7 @@ print(weight['fuck'])
 print(sess.run(y))
 print(sess.run(hp))
 print(sess.run(h))
+
+
+for i in range(10):
+	print("Am I stupid?")
