@@ -189,7 +189,7 @@ class ReadData:
 		for i in self.targetWordClassSet:
 			targetClassSet.append(len(i))
 		return targetClassSet
-
+		
 	def getCurrentBatch(self):
 		return self.trainingSentence
 

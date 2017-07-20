@@ -53,3 +53,11 @@ print(sess.run(h))
 
 for i in range(10):
 	print("Am I stupid?")
+
+
+def fuck(i):
+	return i*3, i*4
+
+a,b = fuck(5)
+print(a)
+print(b)

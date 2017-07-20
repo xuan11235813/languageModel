@@ -9,10 +9,12 @@ class TraditionalLexiconNet:
         self.weights = {}
         self.biases = {}
         self.netPara = para.Para.LexiconNeuralNetwork()
+        self.classSetSize = targetClassSetSize
 
 
         #network
         self.weightsInnerClass = []
+        self.biasesInnerClass = []
         self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
         self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
         self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
@@ -24,22 +26,29 @@ class TraditionalLexiconNet:
         #cleat series of class set
         for i in targetClassSetSize:
             if i <= 1:
-                item = tf.Variable([], dtype = tf.float32)
+                subLayer = [self.netPara.GetClassLayer()[0],1]
+                item = tf.Variable(tf.random_normal(subLayer))
+                itemBias = tf.Variable(tf.random_normal([i]))
                 self.weightsInnerClass.append(item)
+                self.biasesInnerClass.append(itemBias)
             else:
                 subLayer = [self.netPara.GetClassLayer()[0],i]
                 item = tf.Variable(tf.random_normal(subLayer))
+                itemBias = tf.Variable(tf.random_normal([i]))
                 self.weightsInnerClass.append(item)
+                self.biasesInnerClass.append(itemBias)
 
         #placeholder
         self.sess = tf.Session()
         self.sequence = tf.placeholder(tf.int32, [None, self.netPara.GetInputWordNum()])
         self.probabilityClass = tf.placeholder("float", [None, self.netPara.GetClassLabelSize()])
-        self.pred = self.multilayer_perceptron(self.sequence, self.netPara.GetInputWordNum())
+        self.pred, self.middle = self.multilayer_perceptron(self.sequence, self.netPara.GetInputWordNum())
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probabilityClass,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
         self.init = tf.global_variables_initializer();
+
+        
         
         #initialize
         self.sess.run(self.init)
@@ -56,11 +65,26 @@ class TraditionalLexiconNet:
         hiddenLayer2 = tf.nn.relu(hiddenLayer2)
 
         outClass = tf.add(tf.matmul(hiddenLayer2, self.weights['outClass']),self.biases['outClass'])
-        return outClass
+        return outClass, hiddenLayer2
 
-    def networkPrognose(self, sourceTarget):
-        out = self.sess.run(self.calculatedProb,feed_dict={self.sequence : sourceTarget})
-        return out
+    def networkPrognose(self, sourceTarget, classAndClassIndex):
+        output = self.sess.run(self.calculatedProb,feed_dict={self.sequence : sourceTarget})
+        outProbability = []
+        for i in range(len(classAndClassIndex)):
+            classIndex = classAndClassIndex[i][0]
+            innerIndex = classAndClassIndex[i][1]
+            if self.classSetSize[classIndex] <= 1:
+                outProbability.append(output[i][classIndex])
+                output = self.sess.run(self.calculatedProb,feed_dict={self.sequence : [sourceTarget[i]]})
+                print(output[i][classIndex])
+            else:
+                innerWeight = self.weightsInnerClass[classIndex]
+                innerBias = self.biasesInnerClass[classIndex]
+                innerOutput = tf.nn.softmax(tf.add(tf.matmul(self.middle, innerWeight), innerBias))
+                output, innerOO = self.sess.run([self.calculatedProb, innerOutput],feed_dict={self.sequence : [sourceTarget[i]]})
+                outProbability.append(output[i][classIndex] * innerOO[innerIndex])
+                print(output[i][classIndex] * innerOutput[innerIndex])
+        return outProbability
 
     def trainingBatch(self, batch_sequence, batch_probabilityClass):
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequence: batch_sequence,
