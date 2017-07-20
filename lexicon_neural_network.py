@@ -38,7 +38,8 @@ class TraditionalLexiconNet:
                 self.weightsInnerClass.append(item)
                 self.biasesInnerClass.append(itemBias)
 
-        #placeholder
+        # placeholder
+        # for common words
         self.sess = tf.Session()
         self.sequence = tf.placeholder(tf.int32, [None, self.netPara.GetInputWordNum()])
         self.probabilityClass = tf.placeholder("float", [None, self.netPara.GetClassLabelSize()])
@@ -48,7 +49,6 @@ class TraditionalLexiconNet:
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
         self.init = tf.global_variables_initializer();
 
-        
         
         #initialize
         self.sess.run(self.init)
@@ -67,6 +67,7 @@ class TraditionalLexiconNet:
         outClass = tf.add(tf.matmul(hiddenLayer2, self.weights['outClass']),self.biases['outClass'])
         return outClass, hiddenLayer2
 
+
     def networkPrognose(self, sourceTarget, classAndClassIndex):
         output = self.sess.run(self.calculatedProb,feed_dict={self.sequence : sourceTarget})
         outProbability = []
@@ -75,15 +76,13 @@ class TraditionalLexiconNet:
             innerIndex = classAndClassIndex[i][1]
             if self.classSetSize[classIndex] <= 1:
                 outProbability.append(output[i][classIndex])
-                output = self.sess.run(self.calculatedProb,feed_dict={self.sequence : [sourceTarget[i]]})
-                print(output[i][classIndex])
             else:
+                probBase = output[i][classIndex]
                 innerWeight = self.weightsInnerClass[classIndex]
                 innerBias = self.biasesInnerClass[classIndex]
-                innerOutput = tf.nn.softmax(tf.add(tf.matmul(self.middle, innerWeight), innerBias))
-                output, innerOO = self.sess.run([self.calculatedProb, innerOutput],feed_dict={self.sequence : [sourceTarget[i]]})
-                outProbability.append(output[i][classIndex] * innerOO[innerIndex])
-                print(output[i][classIndex] * innerOutput[innerIndex])
+                innerProb = tf.nn.softmax(tf.add(tf.matmul(self.middle, innerWeight), innerBias))
+                innerOutput = self.sess.run(innerProb,feed_dict={self.sequence : [sourceTarget[i]]})
+                outProbability.append(probBase * innerOutput[0][innerIndex])
         return outProbability
 
     def trainingBatch(self, batch_sequence, batch_probabilityClass):

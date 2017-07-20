@@ -19,6 +19,9 @@ for word in x:
 p = tf.unstack(y,None,0)
 hp = tf.gather(a1,y)
 h = tf.concat(tf.unstack(tf.gather(a1,y),None,0),0)
+s = []
+for i in range(10):
+	s.append(h)
 #b1 = tf.gather(a, 0)
 #b2 = tf.gather(a, 2)
 #b3 = tf.gather(a, 3)
@@ -61,3 +64,7 @@ def fuck(i):
 a,b = fuck(5)
 print(a)
 print(b)
+
+
+for i in range(10):
+	print(sess.run(s[i]))

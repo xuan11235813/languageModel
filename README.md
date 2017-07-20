@@ -50,7 +50,7 @@ for the following week to 09.07
 		how to generate transition probabilities.(That is not problem anymore)
 
 
-to 23.07
+	to 23.07
 	* process:
 		- every time from main input data( main initialize a process class and input data and implement )
 		- generate the sequence at every point
