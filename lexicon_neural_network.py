@@ -1,8 +1,10 @@
 import tensorflow as tf
 import para
 import math as mt
-class LexiconNet:
-    def __init__(self):
+
+
+class TraditionalLexiconNet:
+    def __init__(self, targetClassSetSize):
         #parameter
         self.weights = {}
         self.biases = {}
@@ -10,6 +12,7 @@ class LexiconNet:
 
 
         #network
+        self.weightsInnerClass = []
         self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
         self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
         self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
@@ -17,6 +20,16 @@ class LexiconNet:
         self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
         self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
         self.biases['outClass'] = tf.Variable(tf.random_normal([self.netPara.GetClassLayer()[1]]))
+
+        #cleat series of class set
+        for i in targetClassSetSize:
+            if i <= 1:
+                item = tf.Variable([], dtype = tf.float32)
+                self.weightsInnerClass.append(item)
+            else:
+                subLayer = [self.netPara.GetClassLayer()[0],i]
+                item = tf.Variable(tf.random_normal(subLayer))
+                self.weightsInnerClass.append(item)
 
         #placeholder
         self.sess = tf.Session()

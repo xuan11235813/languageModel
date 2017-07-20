@@ -9,6 +9,7 @@ class SentencePair:
 		self._source = []
 		self._target = []
 		self._targetClass = []
+		self._innerClassIndex = []
 
 
 
@@ -43,13 +44,10 @@ class ReadData:
 		self.targetVocabFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTargetVocabFilePath())
 		self.readTargetDictionaryClass(self.targetVocabFilePath)
 
+		# 
 		self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTrainingDataFilePath())
 		self.readTrainDataBatch(self.trainingDataFilePath)
 
-
-		for i in range(1999):
-			print('*************')
-			print(len(self.targetWordClassSet[i]))
 
 		if self.alert != 0 :
 			print('insufficient input data file')
@@ -119,11 +117,14 @@ class ReadData:
 					returnValue = self.findTargetVocabIndexAndClass(word)
 					_allTarget += 1
 					if returnValue[0] != -1:
+						innerClass = self.targetWordClassSet[int(returnValue[1])].index(word)
+						sentencePair._innerClassIndex.append(innerClass)
 						sentencePair._target.append(returnValue[0])
 						sentencePair._targetClass.append(returnValue[1])
-						
+
 					else:
 						targetAbnormal += 1
+
 				self.trainingSentence.append(sentencePair)
 			#print('target training data with noise: ' + str(targetAbnormal/float(_allTarget)))
 			#print('source training data with noise: ' + str(sourceAbnormal/float(_allSource)))
@@ -165,6 +166,8 @@ class ReadData:
 					returnValue = self.findTargetVocabIndexAndClass(word)
 					_allTarget += 1
 					if returnValue[0] != -1:
+						innerClass = self.targetWordClassSet[int(returnValue[1])].index(word)
+						sentencePair._innerClassIndex.append(innerClass)
 						sentencePair._target.append(returnValue[0])
 						sentencePair._targetClass.append(returnValue[1])
 						
@@ -181,8 +184,14 @@ class ReadData:
 			print("training files do not exist")
 			self.alert += 1
 		return batchReady
+	def getTargetClassSetSize(self):
+		targetClassSet = []
+		for i in self.targetWordClassSet:
+			targetClassSet.append(len(i))
+		return targetClassSet
 
-		
+	def getCurrentBatch(self):
+		return self.trainingSentence
 
 	def checkStatus(self):
 		if self.alert == 0:

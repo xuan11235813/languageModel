@@ -1,7 +1,9 @@
 import tensorflow as tf
 import para
 import math as mt
-class AlignmentNet:
+
+
+class TraditionalAlignmentNet:
     def __init__(self):
         #parameter
         self.weights = {}
