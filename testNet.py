@@ -1,4 +1,5 @@
 import lexicon_neural_network as ll
+import alignment_neural_network as al
 import data
 import samples
 
@@ -6,7 +7,7 @@ _data = data.ReadData()
 targetClassSetSize = _data.getTargetClassSetSize()
 
 net = ll.TraditionalLexiconNet(targetClassSetSize)
-
+net2 = al.TraditionalAlignmentNet()
 
 a = [[39230, 31011, 4, 18691, 9438, 8, 3688, 17389], 
 [39230, 31011, 4, 18691, 9438, 8, 3688, 17389],
@@ -23,9 +24,10 @@ print(test._target)
 print(test._targetClass)
 print(test._innerClassIndex)
 samples, labels = p.getLexiconSamples(test)
-samples2 = p.getAlignmentSamples(test)
+samples2, _ = p.getAlignmentSamples(test)
 
 print(samples2)
 
-o = net.networkPrognose(samples,labels)
-print(o)
+#o = net.networkPrognose(samples,labels)
+o1 = net2.networkPrognose(samples2)
+print(o1)
