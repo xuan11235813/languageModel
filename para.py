@@ -31,7 +31,7 @@ class Para:
 			self.hiddenLayer1stOutput = 1000
 			self.hiddenLayer2ndOutput = 500
 			self.outputLayerClassOutput = 2000
-			self.outputLayerWordOutput = 40680
+			self.outputLayerWordOutput = 40681
 			self.learningRate = 0.02
 
 		def GetLexiconSourceWindowSize(self):			       	
@@ -62,16 +62,16 @@ class Para:
 		def __init__(self):
 			self.alignmentSourceWindowSize = 5
 			self.alignmentTargetWindowSize = 3
-			self.projectionLayerInputDim = 40680
+			self.projectionLayerInputDim = 40681
 			self.projectionLayerOutputDim = 200
 			self.hiddenLayer1stOutput = 1000
 			self.hiddenLayer2ndOutput = 500
 			self.outputLayerJumpOutput = 101
 			self.learningRate = 0.02
 
-		def GetLexiconSourceWindowSize(self):			       	
+		def GetAlignmentSourceWindowSize(self):			       	
 			return self.alignmentSourceWindowSize
-		def GetLexiconTargetWindowSize(self):
+		def GetAlignmentTargetWindowSize(self):
 			return self.alignmentTargetWindowSize
 		def GetInputWordNum(self):
 			return self.alignmentSourceWindowSize + self.alignmentTargetWindowSize

@@ -14,6 +14,7 @@ class SentencePair:
 
 
 
+
 class ReadData:
 	def __init__(self):
 		# these are inner parameters
@@ -25,10 +26,15 @@ class ReadData:
 		self.trainFileCurrentPosition  = 0
 		self.targetWordClassSet = []
 
+		self.sourceVocab.append('')
+		self.targetVocab.append('')
+		self.targetClass.append('0')
+
 		# initialize the target word class set
 		for i in range(2000):
 			item = []
 			self.targetWordClassSet.append(item)
+		self.targetWordClassSet[0].append('')
 
 		# for any unsafe manipulate
 		self.alert = 0
@@ -48,6 +54,13 @@ class ReadData:
 		self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTrainingDataFilePath())
 		self.readTrainDataBatch(self.trainingDataFilePath)
 
+		#print(self.sourceVocab.index(''))
+		#print(self.targetVocab.index(''))
+		#print(len(self.sourceVocab))
+		#print(self.trainingSentence[0]._source)
+		#print(self.trainingSentence[0]._target)
+		#print(self.trainingSentence[0]._targetClass)
+		#print(self.trainingSentence[0]._innerClassIndex)
 
 		if self.alert != 0 :
 			print('insufficient input data file')
@@ -57,6 +70,8 @@ class ReadData:
 		value = -1
 		try:
 			value = self.sourceVocab.index( word )
+			if value == 0:
+				value = -1
 		except ValueError as err:
 			value = -1
 		return value
@@ -65,6 +80,8 @@ class ReadData:
 		try:
 			value.append(self.targetVocab.index( word ))
 			value.append(int(self.targetClass[self.targetVocab.index( word )]))
+			if value[0] == 0:
+				value[0] = -1
 		except ValueError as err:
 			value.append(-1)
 		return value
