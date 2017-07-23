@@ -40,7 +40,13 @@ class ForwardBackward:
 		backward = np.array(backward)
 		gamma = forward * backward
 		gamma = self.selfNormilization(gamma)
-		print(gamma)
+		
+		alignmentProb = []
+
+		for i in range(targetNum-1):
+			
+
+
 
 		return lexicon, alignment
 
