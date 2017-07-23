@@ -17,9 +17,7 @@ if _data.checkStatus() == 0:
 			break
 		else:
 			_process.processBatch(_data.getCurrentBatch())
-			
-
-	
+				
 else:
 	print('stop the program')
 	

@@ -11,6 +11,11 @@ class SentencePair:
 		self._targetClass = []
 		self._innerClassIndex = []
 
+	def getSentenceSize(self):
+		sourceNum = len(self._source)
+		targetNum = len(self._target)
+		return targetNum, sourceNum
+
 
 
 
