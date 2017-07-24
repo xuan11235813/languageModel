@@ -8,6 +8,7 @@ targetClassSetSize = _data.getTargetClassSetSize()
 
 #initialize the process
 _process = process.ProcessTraditional(targetClassSetSize)
+_process.processBatch(_data.getCurrentBatch())
 
 if _data.checkStatus() == 0:
 	batchStatus = 0

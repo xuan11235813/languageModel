@@ -26,7 +26,7 @@ class Para:
 		def __init__(self):
 			self.lexiconSourceWindowSize = 5
 			self.lexiconTargetWindowSize = 3
-			self.projectionLayerInputDim = 40680
+			self.projectionLayerInputDim = 40681
 			self.projectionLayerOutputDim = 200
 			self.hiddenLayer1stOutput = 1000
 			self.hiddenLayer2ndOutput = 500

@@ -39,22 +39,37 @@ class ForwardBackward:
 		forward = np.array(forward)
 		backward = np.array(backward)
 		gamma = forward * backward
-		gamma = self.selfNormilization(gamma)
+		gamma = self.selfNormalization(gamma)
 		
-		alignmentProb = []
+		alignmentGamma = []
 
-		for i in range(targetNum-1):
-			
+		for t in range(targetNum-1):
+			for i in range(sourceNum):
+				alignmentGammaItem = []
+				for j in range(sourceNum):
+					a_tij = alignment[t*sourceNum + i][center + j -i]
+					b_tj = lexicon[(t+1)*sourceNum + j]
+					item = forward[t][i] *backward[t+1][j] * a_tij * b_tj
+					alignmentGammaItem.append(item)
+				alignmentGamma.append(alignmentGammaItem)
 
+		alignmentGamma = self.selfMatrixNormalization(alignmentGamma, sourceNum)
+		return gamma, alignmentGamma
 
-
-		return lexicon, alignment
-
-	def selfNormilization(self, anArray):
+	def selfNormalization( self, anArray ):
 		for i in range(len(anArray)):
 			listItemSum = np.sum(anArray[i])
 			if listItemSum != 0:
 				anArray[i] = anArray[i]/listItemSum
 			else:
 				anArray[i] = np.ones(len(anArray[i]))/len(anArray[i])
+		return anArray
+
+	def selfMatrixNormalization( self, anArray, step ):
+		anArray = np.array(anArray)
+		frame = len(anArray)/step
+		for i in range(frame):
+			matrixSum = np.sum(anArray[(i*step):((i+1)*step)])
+			if matrixSum != 0:
+				anArray[(i*step):((i+1)*step)] = anArray[(i*step):((i+1)*step)]/matrixSum
 		return anArray

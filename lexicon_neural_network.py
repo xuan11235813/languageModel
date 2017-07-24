@@ -58,6 +58,8 @@ class TraditionalLexiconNet:
         generateVector = tf.gather(self.weights['projection'], sourceTarget)
         unstackVector = tf.unstack(generateVector, None, 1)
         concatVector = tf.concat(unstackVector, 1)
+        #concatVector = tf.nn.embedding_lookup(self.weights['projection'], sourceTarget)
+        #concatVector = tf.reshape(concatVector ,[-1,1600])
         hiddenLayer1 = tf.add(tf.matmul(concatVector, self.weights['hidden1']), self.biases['bHidden1'])
         hiddenLayer1 = tf.nn.relu(hiddenLayer1)
 
@@ -67,10 +69,10 @@ class TraditionalLexiconNet:
         outClass = tf.add(tf.matmul(hiddenLayer2, self.weights['outClass']),self.biases['outClass'])
         return outClass, hiddenLayer2
 
-
     def networkPrognose(self, sourceTarget, classAndClassIndex):
-        output = self.sess.run(self.calculatedProb,feed_dict={self.sequence : sourceTarget})
+        output, middle = self.sess.run([self.calculatedProb, self.middle],feed_dict={self.sequence : sourceTarget})
         outProbability = []
+
         for i in range(len(classAndClassIndex)):
             classIndex = classAndClassIndex[i][0]
             innerIndex = classAndClassIndex[i][1]
@@ -78,11 +80,16 @@ class TraditionalLexiconNet:
                 outProbability.append(output[i][classIndex])
             else:
                 probBase = output[i][classIndex]
+                
+                '''
+                probBase = output[i][classIndex]
                 innerWeight = self.weightsInnerClass[classIndex]
                 innerBias = self.biasesInnerClass[classIndex]
                 innerProb = tf.nn.softmax(tf.add(tf.matmul(self.middle, innerWeight), innerBias))
                 innerOutput = self.sess.run(innerProb,feed_dict={self.sequence : [sourceTarget[i]]})
                 outProbability.append(probBase * innerOutput[0][innerIndex])
+                '''
+                outProbability.append(0)
         return outProbability
 
     def trainingBatch(self, batch_sequence, batch_probabilityClass):
