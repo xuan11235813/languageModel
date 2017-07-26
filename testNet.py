@@ -32,6 +32,8 @@ print('fuck3')
 o = net.networkPrognose(samples,labels)
 o1 = net2.networkPrognose(samples2)
 
-print('fuck4')
+print(o)
+print(o1)
 FB.calculateForwardBackward(o,o1, targetNum, sourceNum)
 print('fuck5')
+

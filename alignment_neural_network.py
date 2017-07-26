@@ -39,10 +39,10 @@ class TraditionalAlignmentNet:
         unstackVector = tf.unstack(generateVector, None, 1)
         concatVector = tf.concat(unstackVector, 1)
         hiddenLayer1 = tf.add(tf.matmul(concatVector, self.weights['hidden1']), self.biases['bHidden1'])
-        hiddenLayer1 = tf.nn.relu(hiddenLayer1)
+        hiddenLayer1 = tf.nn.sigmoid(hiddenLayer1)
 
         hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
-        hiddenLayer2 = tf.nn.relu(hiddenLayer2)
+        hiddenLayer2 = tf.nn.sigmoid(hiddenLayer2)
 
         outLayer = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
         return outLayer

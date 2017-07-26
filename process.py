@@ -27,6 +27,6 @@ class ProcessTraditional:
 			samplesAlignment, labelsAlignment = self.generator.getAlignmentSamples( sentencePair )
 			outputLexicon = self.lNet.networkPrognose(samplesLexicon, labelsLexicon)
 			outputAlignment = self.aNet.networkPrognose(samplesAlignment)
-			#gamma, alignmentGamma = self.forwardBackward.calculateForwardBackward( outputLexicon, outputAlignment, targetNum, sourceNum )
+			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackward( outputLexicon, outputAlignment, targetNum, sourceNum )
 
 			print(i)

@@ -11,6 +11,8 @@ class ForwardBackward:
 
 		alignment = np.ndarray.tolist(alignment)
 		center = int(mt.floor(float(len(alignment[0]))/2))
+		# for limited the jump
+		jumpLimited = center
 		forward = []
 		forwardZero =  lexicon[0:sourceNum]
 		forward.append( forwardZero )
@@ -19,7 +21,11 @@ class ForwardBackward:
 			for j in range(sourceNum):
 				item = []
 				for j_ in range(sourceNum):
-					item.append( alignment[i*sourceNum + j_][center + j -j_]*forward[-1][j_] )
+					if abs(j-j_) >= jumpLimited:
+						prob = 0
+					else:
+						prob = alignment[i*sourceNum + j_][center + j -j_]
+					item.append( prob * forward[-1][j_] )
 				forwardItem.append(np.sum(item))
 			forward.append(forwardItem)
 
@@ -32,7 +38,11 @@ class ForwardBackward:
 				item = []
 				for j_ in range( sourceNum ):
 					i_ = targetNum - 2  -i 
-					item.append( alignment[i_*sourceNum + j][center + j_ -j] * backward[0][j_] )
+					if abs(j-j_) >= jumpLimited:
+						prob = 0
+					else:
+						prob = alignment[i_*sourceNum + j][center + j_ -j]
+					item.append( prob * backward[0][j_] )
 				backwardItem.append(np.sum(item))
 			backward.insert(0, backwardItem)
 
@@ -47,7 +57,12 @@ class ForwardBackward:
 			for i in range(sourceNum):
 				alignmentGammaItem = []
 				for j in range(sourceNum):
-					a_tij = alignment[t*sourceNum + i][center + j -i]
+					i_ = targetNum - 2  -i 
+					if abs(j-i) >= jumpLimited:
+						prob = 0
+					else:
+						prob = alignment[t*sourceNum + i][center + j -i]
+					a_tij = prob
 					b_tj = lexicon[(t+1)*sourceNum + j]
 					item = forward[t][i] *backward[t+1][j] * a_tij * b_tj
 					alignmentGammaItem.append(item)
