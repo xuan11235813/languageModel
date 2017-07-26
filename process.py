@@ -28,5 +28,7 @@ class ProcessTraditional:
 			outputLexicon = self.lNet.networkPrognose(samplesLexicon, labelsLexicon)
 			outputAlignment = self.aNet.networkPrognose(samplesAlignment)
 			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackward( outputLexicon, outputAlignment, targetNum, sourceNum )
-
+			lexiconLabel, alignmentLabel = self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
+			self.lNet.trainingBatch(samplesLexicon, lexiconLabel)
+			self.aNet.trainingBatch(samplesAlignment, alignmentLabel)
 			print(i)

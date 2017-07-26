@@ -1,18 +1,21 @@
 import math as mt
 import numpy as np
+import para
 
 class ForwardBackward:
 
 	def __init__(self):
 		print('initialize forward backward class')
-
+		self.alignmentNet = para.Para.AlignmentNeuralNetwork()
 
 	def calculateForwardBackward(self, lexicon, alignment, targetNum, sourceNum):
 
 		alignment = np.ndarray.tolist(alignment)
 		center = int(mt.floor(float(len(alignment[0]))/2))
+		
+
 		# for limited the jump
-		jumpLimited = center
+		jumpLimited = self.alignmentNet.GetJumpLimited()
 		forward = []
 		forwardZero =  lexicon[0:sourceNum]
 		forward.append( forwardZero )

@@ -68,6 +68,7 @@ class Para:
 			self.hiddenLayer2ndOutput = 500
 			self.outputLayerJumpOutput = 101
 			self.learningRate = 0.02
+			self.jumpLimited = 50
 
 		def GetAlignmentSourceWindowSize(self):			       	
 			return self.alignmentSourceWindowSize
@@ -86,5 +87,7 @@ class Para:
 			return [self.hiddenLayer2ndOutput, self.outputLayerJumpOutput]
 		def GetJumpLabelSize(self):
 			return self.outputLayerJumpOutput
+		def GetJumpLimited(self):
+			return self.jumpLimited
 		def GetLearningRate(self):
 			return self.learningRate

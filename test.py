@@ -9,7 +9,8 @@ a2 = tf.Variable(tf.random_normal([4, 3]))
 b = tf.Variable([], dtype = tf.float32)
 h = tf.Variable([], dtype = tf.float32)
 y = tf.Variable([2,2,2,2,2,2,4])
-y1 = tf.Variable([2,2,2],[3,3,3],[4,4,4])
+y2 = tf.Variable([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+y1 = tf.Variable([[2,2,2],[3,3,3],[4,4,4],[5,5,5]])
 h1 = tf.placeholder(tf.float32, [None, 12])
 
 
@@ -68,3 +69,23 @@ print(b)
 
 for i in range(10):
 	print(sess.run(s[i]))
+
+
+
+print(sess.run(y1))
+
+matrix = []
+for i in range(5):
+	matrix.append(y1)
+
+matrix = tf.concat(matrix, 0)
+
+a = tf.reshape(y2, [5,1,4])
+matrix = tf.reshape(matrix, [5,4,3])
+x = tf.matmul(a, matrix)
+print(sess.run(x))
+print(sess.run(tf.reshape(x, [5,3])))
+print(sess.run(tf.nn.softmax(tf.to_float(matrix))))
+
+
+

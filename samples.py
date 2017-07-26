@@ -1,6 +1,6 @@
 import math as mt 
 import para
-
+import numpy as np
 
 class GenerateSamples:
 	def __init__(self):
@@ -48,7 +48,7 @@ class GenerateSamples:
 		self.sourceNum = len(sentencePair._source)
 		samples = []
 		labels = []
-		for i in range(self.targetNum):
+		for i in range(self.targetNum - 1):
 			for j in range(self.sourceNum):
 				alignmentSourceStart = int(j - mt.floor(self.alignmentNetPara.GetAlignmentSourceWindowSize()/2))
 				alignmentSourceEnd = int(alignmentSourceStart + self.alignmentNetPara.GetAlignmentSourceWindowSize())
@@ -72,3 +72,20 @@ class GenerateSamples:
 				samples.append(itemSample)
 				labels.append(itemLabel)
 		return samples, labels
+	def getLabelFromGamma( self, alignmentGamma, lexiconGamma, sentencePair):
+		alignmentLabel = np.zeros([(self.targetNum - 1) * self.sourceNum, self.alignmentNetPara.GetJumpLabelSize()])
+		lexiconLabel = np.zeros([self.targetNum * self.sourceNum, self.lexiconNetPara.GetClassLabelSize()])
+		center = int(self.alignmentNetPara.GetJumpLabelSize()/2)
+		for i in range(self.targetNum):
+			for j in range(self.sourceNum):
+				lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = lexiconGamma[i][j]
+
+		jumpLimited = self.alignmentNetPara.GetJumpLimited()
+		for i in range(self.targetNum  - 1):
+			for j in range(self.sourceNum):
+				for j_ in range(self.sourceNum):
+					if abs(j_ -j) <= jumpLimited:
+						alignmentLabel[i*self.sourceNum + j][j_ - j + center] = alignmentGamma[i*self.sourceNum +j][j_]
+
+
+		return lexiconLabel, alignmentLabel

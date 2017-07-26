@@ -34,6 +34,9 @@ o1 = net2.networkPrognose(samples2)
 
 print(o)
 print(o1)
-FB.calculateForwardBackward(o,o1, targetNum, sourceNum)
-print('fuck5')
+gamma1, gamm2 = FB.calculateForwardBackward(o,o1, targetNum, sourceNum)
+print('haha')
+print(gamma1)
+print('hhaha')
+print(gamm2)
 
