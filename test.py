@@ -1,7 +1,8 @@
-import tensorflow as tf
+#import tensorflow as tf
 import numpy as np
 import math as mt
-
+import para
+'''
 x = [1,3,1]
 
 a1 = tf.Variable(tf.random_normal([5, 4]))
@@ -88,4 +89,26 @@ print(sess.run(tf.reshape(x, [5,3])))
 print(sess.run(tf.nn.softmax(tf.to_float(matrix))))
 
 
+IBMDic = {}
 
+para = para.Para()
+filePath = para.GetIBMFilePath()
+
+try:
+	file = open(filePath, "r")
+	for line in file:
+		item = []
+		for word in line.split(" "):
+			item.append(word)
+		itemDic = {}
+		itemDic[item[1].rstrip()] = float(item[2].rstrip())
+		if item[0].rstrip() in IBMDic:
+			IBMDic[item[0].rstrip()][item[1].rstrip()] = float(item[2].rstrip())
+		else:
+			IBMDic[item[0].rstrip()] = itemDic
+
+
+except IOError as err:
+	print("target vocabulary files do not exist")
+	self.alert += 1
+'''

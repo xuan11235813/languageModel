@@ -54,7 +54,7 @@ class TraditionalAlignmentNet:
     def trainingBatch(self, batch_sequence, batch_probabilityClass):
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequence: batch_sequence,
                                 self.probabilityClass: batch_probabilityClass})
-        print(c)
+        return c
 
 
 

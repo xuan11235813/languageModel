@@ -4,7 +4,8 @@ class Para:
 		#for source data file
 		self.sourceVocabFilePath = "data/sourceVocab"
 		self.targetVocabFilePath = "data/engClass"
-		self.trainingDataFilePath = "data/dev"
+		self.trainingDataFilePath = "data/dev.train"
+		self.IBMDataFilePath = 'data/prob'
 
 		#training property
 		self.batchSize = 128
@@ -15,7 +16,8 @@ class Para:
 		return self.targetVocabFilePath
 	def GetTrainingDataFilePath(self):
 		return self.trainingDataFilePath
-
+	def GetIBMFilePath(self):
+		return self.IBMDataFilePath
 
 	
 
@@ -32,7 +34,7 @@ class Para:
 			self.hiddenLayer2ndOutput = 500
 			self.outputLayerClassOutput = 2000
 			self.outputLayerWordOutput = 40681
-			self.learningRate = 0.02
+			self.learningRate = 0.01
 
 		def GetLexiconSourceWindowSize(self):			       	
 			return self.lexiconSourceWindowSize
@@ -67,7 +69,7 @@ class Para:
 			self.hiddenLayer1stOutput = 1000
 			self.hiddenLayer2ndOutput = 500
 			self.outputLayerJumpOutput = 101
-			self.learningRate = 0.02
+			self.learningRate = 0.01
 			self.jumpLimited = 50
 
 		def GetAlignmentSourceWindowSize(self):			       	
@@ -91,3 +93,13 @@ class Para:
 			return self.jumpLimited
 		def GetLearningRate(self):
 			return self.learningRate
+
+	class AlignmentNeuralNetworkUnitTest:
+
+		def __init__(self):
+			
+			self.jumpLimited = 3
+		def GetJumpLimited(self):
+			return self.jumpLimited
+		
+

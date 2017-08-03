@@ -72,6 +72,7 @@ class GenerateSamples:
 				samples.append(itemSample)
 				labels.append(itemLabel)
 		return samples, labels
+		
 	def getLabelFromGamma( self, alignmentGamma, lexiconGamma, sentencePair):
 		alignmentLabel = np.zeros([(self.targetNum - 1) * self.sourceNum, self.alignmentNetPara.GetJumpLabelSize()])
 		lexiconLabel = np.zeros([self.targetNum * self.sourceNum, self.lexiconNetPara.GetClassLabelSize()])

@@ -7,6 +7,70 @@ class ForwardBackward:
 	def __init__(self):
 		print('initialize forward backward class')
 		self.alignmentNet = para.Para.AlignmentNeuralNetwork()
+	def calculateForwardBackwardInitial(self, lexicon, targetNum, sourceNum):
+
+		probAlignment = 1.0/sourceNum
+		
+
+		# for limited the jump
+		jumpLimited = self.alignmentNet.GetJumpLimited()
+		forward = []
+		forwardZero =  lexicon[0:sourceNum]
+		forward.append( forwardZero )
+		for i in range(targetNum-1):
+			forwardItem = []
+			for j in range(sourceNum):
+				item = []
+				for j_ in range(sourceNum):
+					if abs(j-j_) >= jumpLimited:
+						prob = 0
+					else:
+						prob = probAlignment
+					item.append( prob * forward[-1][j_] )
+				forwardItem.append(np.sum(item))
+			forward.append(forwardItem)
+
+		backward = []
+		backwardEnd = np.ndarray.tolist(np.ones( sourceNum ))
+		backward.append( backwardEnd )
+		for i in range( targetNum-1):
+			backwardItem = []
+			for j in range( sourceNum ):
+				item = []
+				for j_ in range( sourceNum ):
+					i_ = targetNum - 2  -i 
+					if abs(j-j_) >= jumpLimited:
+						prob = 0
+					else:
+						prob = probAlignment
+					item.append( prob * backward[0][j_] )
+				backwardItem.append(np.sum(item))
+			backward.insert(0, backwardItem)
+
+		forward = np.array(forward)
+		backward = np.array(backward)
+		gamma = forward * backward
+		gamma = self.selfNormalization(gamma)
+		
+		alignmentGamma = []
+
+		for t in range(targetNum-1):
+			for i in range(sourceNum):
+				alignmentGammaItem = []
+				for j in range(sourceNum):
+					i_ = targetNum - 2  -i 
+					if abs(j-i) >= jumpLimited:
+						prob = 0
+					else:
+						prob = probAlignment
+					a_tij = prob
+					b_tj = lexicon[(t+1)*sourceNum + j]
+					item = forward[t][i] *backward[t+1][j] * a_tij * b_tj
+					alignmentGammaItem.append(item)
+				alignmentGamma.append(alignmentGammaItem)
+
+		alignmentGamma = self.selfMatrixNormalization(alignmentGamma, sourceNum)
+		return gamma, alignmentGamma
 
 	def calculateForwardBackward(self, lexicon, alignment, targetNum, sourceNum):
 
@@ -29,8 +93,9 @@ class ForwardBackward:
 					else:
 						prob = alignment[i*sourceNum + j_][center + j -j_]
 					item.append( prob * forward[-1][j_] )
-				forwardItem.append(np.sum(item))
+				forwardItem.append(np.sum(item) * lexicon[(i+1)*sourceNum + j])
 			forward.append(forwardItem)
+
 
 		backward = []
 		backwardEnd = np.ndarray.tolist(np.ones( sourceNum ))
@@ -48,7 +113,8 @@ class ForwardBackward:
 					item.append( prob * backward[0][j_] )
 				backwardItem.append(np.sum(item))
 			backward.insert(0, backwardItem)
-
+		print('forward')
+		print(forward)
 		forward = np.array(forward)
 		backward = np.array(backward)
 		gamma = forward * backward
@@ -91,3 +157,6 @@ class ForwardBackward:
 			if matrixSum != 0:
 				anArray[(i*step):((i+1)*step)] = anArray[(i*step):((i+1)*step)]/matrixSum
 		return anArray
+
+	def installTestEnvironment(self):
+		self.alignmentNet = AlignmentNeuralNetworkUnitTest()

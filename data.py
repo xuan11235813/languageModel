@@ -2,6 +2,7 @@
 import sys
 import para
 import os
+import numpy as np
 
 class SentencePair:
 
@@ -10,12 +11,24 @@ class SentencePair:
 		self._target = []
 		self._targetClass = []
 		self._innerClassIndex = []
+		self._IBM1Data = []
+
 
 	def getSentenceSize(self):
 		sourceNum = len(self._source)
 		targetNum = len(self._target)
 		return targetNum, sourceNum
 
+	def getIBMLexiconInitialData(self):
+		return self._IBM1Data
+
+	def checkSentence(self):
+		flag = 0
+		if len(self._source) < 1:
+			flag = 1
+		if len(self._target) < 2:
+			flag = 1
+		return flag
 
 
 
@@ -30,6 +43,7 @@ class ReadData:
 		self.trainFile = file
 		self.trainFileCurrentPosition  = 0
 		self.targetWordClassSet = []
+		self.IBMDic = {}
 
 		self.sourceVocab.append('')
 		self.targetVocab.append('')
@@ -55,9 +69,13 @@ class ReadData:
 		self.targetVocabFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTargetVocabFilePath())
 		self.readTargetDictionaryClass(self.targetVocabFilePath)
 
+		self.IBM1DataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetIBMFilePath())
+		self.readIBM1Data(self.IBM1DataFilePath)
 		# 
 		self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTrainingDataFilePath())
 		self.readTrainDataBatch(self.trainingDataFilePath)
+
+		
 
 		#print(self.sourceVocab.index(''))
 		#print(self.targetVocab.index(''))
@@ -66,6 +84,7 @@ class ReadData:
 		#print(self.trainingSentence[0]._target)
 		#print(self.trainingSentence[0]._targetClass)
 		#print(self.trainingSentence[0]._innerClassIndex)
+		#print(len(self.IBMDic))
 
 		if self.alert != 0 :
 			print('insufficient input data file')
@@ -147,7 +166,10 @@ class ReadData:
 					else:
 						targetAbnormal += 1
 
-				self.trainingSentence.append(sentencePair)
+				prob = self.findIBM1Prob(sentencePair._source, sentencePair._target)
+				sentencePair._IBM1Data = prob
+				if sentencePair.checkSentence() == 0:
+					self.trainingSentence.append(sentencePair)
 			#print('target training data with noise: ' + str(targetAbnormal/float(_allTarget)))
 			#print('source training data with noise: ' + str(sourceAbnormal/float(_allSource)))
 			
@@ -195,7 +217,10 @@ class ReadData:
 						
 					else:
 						targetAbnormal += 1
-				self.trainingSentence.append(sentencePair)
+				prob = self.findIBM1Prob(sentencePair._source, sentencePair._target)
+				sentencePair._IBM1Data = prob
+				if sentencePair.checkSentence() == 0:
+					self.trainingSentence.append(sentencePair)
 			
 			self.trainFileCurrentPosition = self.trainFile.tell()
 			if len(self.trainingSentence) ==  128:
@@ -221,3 +246,44 @@ class ReadData:
 		else:
 			return 1
 
+
+	def readIBM1Data(self, filePath):
+		try:
+			file = open(filePath, "r")
+			for line in file:
+				item = []
+				for word in line.split(" "):
+					item.append(word)
+				itemDic = {}
+				itemDic[item[1].rstrip()] = float(item[2].rstrip())
+				if item[0].rstrip() in self.IBMDic:
+					self.IBMDic[item[0].rstrip()][item[1].rstrip()] = float(item[2].rstrip())
+				else:
+					self.IBMDic[item[0].rstrip()] = itemDic
+
+
+		except IOError as err:
+			print("target vocabulary files do not exist")
+			self.alert += 1
+		
+	def findIBM1Prob(self, source, target):
+		prob = []
+
+		for i in target:
+			for j in source:
+				sourceWord = self.sourceVocab[j]
+				targetWord = self.targetVocab[i]
+				if sourceWord in self.IBMDic:
+					if targetWord in self.IBMDic[sourceWord]:
+						probItem  = self.IBMDic[sourceWord][targetWord]
+					else:
+						probItem = 0
+				else:
+					print('vocabulary wrong')
+				
+				prob.append(probItem)
+
+		return prob
+
+	def refreshFilePosition(self):
+		self.trainFileCurrentPosition  = 0

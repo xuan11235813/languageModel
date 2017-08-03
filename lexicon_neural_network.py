@@ -14,7 +14,6 @@ class TraditionalLexiconNet:
         #network
         self.weightsInnerClass = []
         self.biasesInnerClass = []
-        self.placeholderInnerClass = []
 
         self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
         self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
@@ -36,24 +35,7 @@ class TraditionalLexiconNet:
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
         self.init = tf.global_variables_initializer();
 
-        #create series of class set
-        for i in targetClassSetSize:
-            if i <= 1:
-                subLayer = [self.netPara.GetClassLayer()[0],1]
-                item = tf.Variable(tf.random_normal(subLayer))
-                itemBias = tf.Variable(tf.random_normal([i]))
-                self.weightsInnerClass.append(item)
-                self.biasesInnerClass.append(itemBias)
-                
-            else:
-
-                subLayer = [self.netPara.GetClassLayer()[0],200]
-                item = tf.Variable(tf.random_normal(subLayer))
-                itemBias = tf.Variable(tf.random_normal([200]))
-                self.weightsInnerClass.append(item)
-                self.biasesInnerClass.append(itemBias)
-                
-
+        
         #initialize
         self.sess.run(self.init)
 
@@ -76,41 +58,18 @@ class TraditionalLexiconNet:
     def networkPrognose(self, sourceTarget, classAndClassIndex):
         self.output, middleOutput = self.sess.run([self.calculatedProb, self.middle],feed_dict={self.sequence : sourceTarget})
         outProbability = []
-        sequenceIndex = []
-        matrix = []
-        biasMatrix = []
-        innerIndexVector = []
 
         for i in range(len(classAndClassIndex)):
             classIndex = classAndClassIndex[i][0]
             innerIndex = classAndClassIndex[i][1]
             outProbability.append(self.output[i][classIndex])
-            if self.classSetSize[classIndex] > 1:
-                probBase = self.output[i][classIndex]
-                innerIndexVector.append(innerIndex)
-                #sequenceIndex.append(i)
-                #matrix.append(self.weightsInnerClass[classIndex])
-                #biasMatrix.append(self.biasesInnerClass[classIndex])
-        '''
-        if len(sequenceIndex) > 0:
-            generateMiddle = tf.gather(middleOutput, sequenceIndex)
-            listNum = len(sequenceIndex)
-            itemNum = len(middleOutput[0])
-            matrix = tf.reshape(tf.concat(matrix, 0), [listNum, itemNum ,200])
-            flatVector = tf.reshape(generateMiddle, [listNum, 1 ,itemNum])
-            biasMatrix = tf.reshape(tf.concat(biasMatrix, 0), [listNum, 200]  )
-            multiResult = tf.reshape(tf.matmul(flatVector, matrix), [listNum, 200])
-            result = tf.add(multiResult, biasMatrix)
-            innerProb = tf.nn.softmax(result)
-            innerOutput = self.sess.run(innerProb)
-            '''
-
+        
         return outProbability
 
     def trainingBatch(self, batch_sequence, batch_probabilityClass):
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequence: batch_sequence,
                                 self.probabilityClass: batch_probabilityClass})
-        print(c)
+        return c
 
 
 
