@@ -20,6 +20,7 @@ class ProcessTraditional:
 		print('...')
 		print("initialize the process finish")
 
+
 	def processBatchWithBaumWelch( self, sentencePairBatch):
 		averageCostAlignment = 0;
 		averageCostLexicon = 0;
@@ -65,3 +66,13 @@ class ProcessTraditional:
 		print('costLexicon:   '+ repr(averageCostLexicon))
 		print('costAlignment: '+ repr(averageCostAlignment))
 
+	def processUnitLexiconTest(self, sentencePairBatch):
+		averageCostLexicon = 0;
+
+		sentencePair = sentencePairBatch[0]
+		targetNum, sourceNum = sentencePair.getSentenceSize()
+		samplesLexicon, labelsLexicon = self.generator.getLexiconSamples( sentencePair )
+		lexiconLabel= self.generator.getUnitTestlabel(sentencePair)
+		for i in range(30):
+			costLexicon = self.lNet.trainingBatch(samplesLexicon, lexiconLabel)
+			print(costLexicon)

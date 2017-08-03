@@ -90,3 +90,12 @@ class GenerateSamples:
 
 
 		return lexiconLabel, alignmentLabel
+
+	def getUnitTestlabel(self, sentencePair):
+		alignmentLabel = np.zeros([(self.targetNum - 1) * self.sourceNum, self.alignmentNetPara.GetJumpLabelSize()])
+		lexiconLabel = np.zeros([self.targetNum * self.sourceNum, self.lexiconNetPara.GetClassLabelSize()])
+		center = int(self.alignmentNetPara.GetJumpLabelSize()/2)
+		for i in range(self.targetNum):
+			for j in range(self.sourceNum):
+				lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = 1
+		return lexiconLabel

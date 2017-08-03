@@ -3,7 +3,7 @@ import data
 import process
 
 # specify the training epoch
-epochMax = 100
+epochMax = 6
 epoch = 0
 
 #initialize the data set
