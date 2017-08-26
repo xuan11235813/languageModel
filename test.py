@@ -1,7 +1,8 @@
-#import tensorflow as tf
+import tensorflow as tf
 import numpy as np
 import math as mt
 import para
+
 '''
 x = [1,3,1]
 
@@ -112,3 +113,29 @@ except IOError as err:
 	print("target vocabulary files do not exist")
 	self.alert += 1
 '''
+def testFunction(s = 0):
+	if s == 0:
+		print('hey baby')
+	else:
+		print('yeah')
+
+weight = tf.Variable(tf.random_normal([3,5]))
+sess = tf.Session()
+init = tf.global_variables_initializer();
+
+sess.run(init)
+
+a = sess.run(weight)
+
+np.save("data/weight", a)
+
+b = np.load('data/weight.npy')
+
+
+print(a)
+print(b)
+
+testFunction()
+testFunction(1)
+
+

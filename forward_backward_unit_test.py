@@ -1,3 +1,4 @@
+
 import numpy as np
 import forward_backward as FB
 targetNum = 4
@@ -30,3 +31,4 @@ gamma, alignmentGamma = fb.calculateForwardBackward(lexicon, alignment,targetNum
 
 print(gamma)
 print(alignmentGamma)
+

@@ -3,15 +3,18 @@ import lexicon_neural_network as lexiconSet
 import alignment_neural_network as alignmentSet 
 import samples
 import forward_backward as fb 
-
+import para
 class ProcessTraditional:
 	def __init__( self, targetClassSetSize ):
 
+		# configure restart or continue
+		continue_pre = para.Para().ContinueOrRestart()
+		
 		# initialize the networks. lNet for lexicon neural network and 
 		# aNet for alignment network.
 		 
-		self.lNet = lexiconSet.TraditionalLexiconNet(targetClassSetSize)
-		self.aNet = alignmentSet.TraditionalAlignmentNet()
+		self.lNet = lexiconSet.TraditionalLexiconNet(targetClassSetSize, continue_pre)
+		self.aNet = alignmentSet.TraditionalAlignmentNet(continue_pre)
 		self.generator = samples.GenerateSamples()
 		self.forwardBackward = fb.ForwardBackward()
 

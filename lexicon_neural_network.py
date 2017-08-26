@@ -1,9 +1,10 @@
 import tensorflow as tf
 import para
 import math as mt
+import numpy as np
 
 class TraditionalLexiconNet:
-    def __init__(self, targetClassSetSize):
+    def __init__(self, targetClassSetSize, continue_pre = 0):
         #parameter
         self.weights = {}
         self.biases = {}
@@ -12,16 +13,30 @@ class TraditionalLexiconNet:
 
 
         #network
-        self.weightsInnerClass = []
-        self.biasesInnerClass = []
 
-        self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
-        self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
-        self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
-        self.weights['outClass'] = tf.Variable(tf.random_normal(self.netPara.GetClassLayer()))
-        self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
-        self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
-        self.biases['outClass'] = tf.Variable(tf.random_normal([self.netPara.GetClassLayer()[1]]))
+        if (continue_pre == 0):
+            self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
+            self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
+            self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
+            self.weights['outClass'] = tf.Variable(tf.random_normal(self.netPara.GetClassLayer()))
+            self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
+            self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
+            self.biases['outClass'] = tf.Variable(tf.random_normal([self.netPara.GetClassLayer()[1]]))
+        else:
+            savedMatrix = np.load('data/lexicon_weight_projection.npy')
+            self.weights['projection'] = tf.Variable(savedMatrix)           
+            savedMatrix = np.load('data/lexicon_weight_hidden1.npy')
+            self.weights['hidden1'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load('data/lexicon_weight_hidden2.npy')
+            self.weights['hidden2'] = tf.Variable(savedMatrix)
+            savedMatrix = np.load('data/lexicon_weight_outClass.npy')
+            self.weights['outClass'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load('data/lexicon_bias_bHidden1.npy')
+            self.biases['bHidden1'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load('data/lexicon_bias_bHidden2.npy')
+            self.biases['bHidden2'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load('data/lexicon_bias_outClass.npy')
+            self.biases['outClass'] = tf.Variable(savedMatrix)
 
         
         # placeholder
@@ -38,6 +53,23 @@ class TraditionalLexiconNet:
         
         #initialize
         self.sess.run(self.init)
+    def saveMatrixToFile():
+        saveMatrix = self.sess.run(self.weights['projection'])
+        np.save('data/lexicon_weight_projection', saveMatrix)
+        saveMatrix = self.sess.run(self.weights['hidden1'])
+        np.save('data/lexicon_weight_hidden1', saveMatrix)
+        saveMatrix = self.sess.run(self.weights['hidden2'])
+        np.save('data/lexicon_weight_hidden2', saveMatrix)
+        saveMatrix = self.sess.run(self.weights['outClass'])
+        np.save('data/lexicon_weight_outClass', saveMatrix)
+        saveMatrix = self.sess.run(self.biases['bHidden1'])
+        np.save('data/lexicon_bias_bHidden1', saveMatrix)
+        saveMatrix = self.sess.run(self.biases['bHidden2'])
+        np.save('data/lexicon_bias_bHidden2', saveMatrix)
+        saveMatrix = self.sess.run(self.biases['outClass'])
+        np.save('data/lexicon_bias_outClass', saveMatrix)
+
+
 
     def multilayer_perceptron(self, sourceTarget, num):
 
