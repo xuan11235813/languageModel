@@ -5,6 +5,8 @@ import process
 # specify the training epoch
 epochMax = 6
 epoch = 0
+recordInterval = 3
+globalBatch = 0
 
 #initialize the data set
 _data = data.ReadData()
@@ -34,7 +36,9 @@ if _data.checkStatus() == 0:
 				_process.processBatchWithBaumWelch(_data.getCurrentBatch())
 			else:
 				_process.processBatch(_data.getCurrentBatch())
-			
+		if globalBatch % recordInterval == recordInterval -1 :
+			_process.recordNetwork()
+		globalBatch += 1
 		
 else:
 	print('stop the program')

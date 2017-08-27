@@ -1,7 +1,8 @@
 import tensorflow as tf
 import para
 import math as mt
-
+import numpy as np
+import os.path
 
 class TraditionalAlignmentNet:
     def __init__(self, continue_pre = 0):
@@ -9,6 +10,15 @@ class TraditionalAlignmentNet:
         self.weights = {}
         self.biases = {}
         self.netPara = para.Para.AlignmentNeuralNetwork()
+
+        parameter = para.Para()
+        self.networkPathPrefix = parameter.GetNetworkStoragePath()
+
+        # test for file exists
+        testPath =  self.networkPathPrefix + 'alignment_weight_projection.npy'
+        if os.path.exists(testPath) == False:
+            print('previous does not exist, start with random')
+            continue_pre = 0
 
         if (continue_pre == 0):
             self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
@@ -20,20 +30,20 @@ class TraditionalAlignmentNet:
             self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetJumpLayer()[1]]))
 
         else:
-            savedMatrix = np.load('data/alignment_weight_projection.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'alignment_weight_projection.npy')
             self.weights['projection'] = tf.Variable(savedMatrix)           
-            savedMatrix = np.load('data/alignment_weight_hidden1.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'alignment_weight_hidden1.npy')
             self.weights['hidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load('data/alignment_weight_hidden2.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'alignment_weight_hidden2.npy')
             self.weights['hidden2'] = tf.Variable(savedMatrix)
-            savedMatrix = np.load('data/alignment_weight_outClass.npy')
-            self.weights['outClass'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load('data/lalignment_bias_bHidden1.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'alignment_weight_out.npy')
+            self.weights['out'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load(self.networkPathPrefix + 'alignment_bias_bHidden1.npy')
             self.biases['bHidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load('data/alignment_bias_bHidden2.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'alignment_bias_bHidden2.npy')
             self.biases['bHidden2'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load('data/alignment_bias_outClass.npy')
-            self.biases['outClass'] = tf.Variable(savedMatrix)
+            savedMatrix = np.load(self.networkPathPrefix + 'alignment_bias_out.npy')
+            self.biases['out'] = tf.Variable(savedMatrix)
         #network
         
         #placeholder
@@ -48,21 +58,22 @@ class TraditionalAlignmentNet:
         
         #initialize
         self.sess.run(self.init)
-    def saveMatrixToFile():
+
+    def saveMatrixToFile(self):
         saveMatrix = self.sess.run(self.weights['projection'])
-        np.save('data/alignment_weight_projection', saveMatrix)
+        np.save(self.networkPathPrefix + 'alignment_weight_projection', saveMatrix)
         saveMatrix = self.sess.run(self.weights['hidden1'])
-        np.save('data/alignment_weight_hidden1', saveMatrix)
+        np.save(self.networkPathPrefix + 'alignment_weight_hidden1', saveMatrix)
         saveMatrix = self.sess.run(self.weights['hidden2'])
-        np.save('data/alignment_weight_hidden2', saveMatrix)
-        saveMatrix = self.sess.run(self.weights['outClass'])
-        np.save('data/alignment_weight_outClass', saveMatrix)
+        np.save(self.networkPathPrefix + 'alignment_weight_hidden2', saveMatrix)
+        saveMatrix = self.sess.run(self.weights['out'])
+        np.save(self.networkPathPrefix + 'alignment_weight_out', saveMatrix)
         saveMatrix = self.sess.run(self.biases['bHidden1'])
-        np.save('data/alignment_bias_bHidden1', saveMatrix)
+        np.save(self.networkPathPrefix + 'alignment_bias_bHidden1', saveMatrix)
         saveMatrix = self.sess.run(self.biases['bHidden2'])
-        np.save('data/alignment_bias_bHidden2', saveMatrix)
-        saveMatrix = self.sess.run(self.biases['outClass'])
-        np.save('data/alignment_bias_outClass', saveMatrix)
+        np.save(self.networkPathPrefix + 'alignment_bias_bHidden2', saveMatrix)
+        saveMatrix = self.sess.run(self.biases['out'])
+        np.save(self.networkPathPrefix + 'alignment_bias_out', saveMatrix)
 
     def multilayer_perceptron(self, sourceTarget, num):
 

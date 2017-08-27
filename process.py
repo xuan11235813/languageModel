@@ -23,7 +23,10 @@ class ProcessTraditional:
 		print('...')
 		print("initialize the process finish")
 
-
+	def recordNetwork(self):
+		self.lNet.saveMatrixToFile()
+		self.aNet.saveMatrixToFile()
+		
 	def processBatchWithBaumWelch( self, sentencePairBatch):
 		averageCostAlignment = 0;
 		averageCostLexicon = 0;

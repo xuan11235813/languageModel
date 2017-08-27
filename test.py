@@ -127,13 +127,14 @@ sess.run(init)
 
 a = sess.run(weight)
 
-np.save("data/weight", a)
+#np.save("data/weight", a)
 
-b = np.load('data/weight.npy')
+b = np.load('data/lexicon_weight_projection.npy')
 
 
 print(a)
-print(b)
+print(len(b))
+print(len(b[0]))
 
 testFunction()
 testFunction(1)

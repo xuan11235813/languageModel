@@ -2,13 +2,14 @@
 class Para:
 	def __init__(self):
 		#general configuration
-		self.continue_pre = 0
+		self.continue_pre = 1
 
 		#for source data file
 		self.sourceVocabFilePath = "data/sourceVocab"
 		self.targetVocabFilePath = "data/engClass"
 		self.trainingDataFilePath = "data/dev.train"
 		self.IBMDataFilePath = 'data/prob'
+		self.networkStoragePath = 'data/network/'
 
 		#training property
 		self.batchSize = 128
@@ -23,6 +24,8 @@ class Para:
 		return self.IBMDataFilePath
 	def ContinueOrRestart(self):
 		return self.continue_pre
+	def GetNetworkStoragePath(self):
+		return self.networkStoragePath
 
 	
 

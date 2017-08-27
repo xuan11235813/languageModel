@@ -2,6 +2,7 @@ import tensorflow as tf
 import para
 import math as mt
 import numpy as np
+import os.path
 
 class TraditionalLexiconNet:
     def __init__(self, targetClassSetSize, continue_pre = 0):
@@ -13,6 +14,15 @@ class TraditionalLexiconNet:
 
 
         #network
+        parameter = para.Para()
+        self.networkPathPrefix = parameter.GetNetworkStoragePath()
+
+        # test for file exists
+        testPath =  self.networkPathPrefix + 'lexicon_weight_projection.npy'
+        if os.path.exists(testPath) == False:
+            print('previous does not exist, start with random')
+            continue_pre = 0
+
 
         if (continue_pre == 0):
             self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
@@ -23,19 +33,19 @@ class TraditionalLexiconNet:
             self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
             self.biases['outClass'] = tf.Variable(tf.random_normal([self.netPara.GetClassLayer()[1]]))
         else:
-            savedMatrix = np.load('data/lexicon_weight_projection.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_projection.npy')
             self.weights['projection'] = tf.Variable(savedMatrix)           
-            savedMatrix = np.load('data/lexicon_weight_hidden1.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden1.npy')
             self.weights['hidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load('data/lexicon_weight_hidden2.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden2.npy')
             self.weights['hidden2'] = tf.Variable(savedMatrix)
-            savedMatrix = np.load('data/lexicon_weight_outClass.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_outClass.npy')
             self.weights['outClass'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load('data/lexicon_bias_bHidden1.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden1.npy')
             self.biases['bHidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load('data/lexicon_bias_bHidden2.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden2.npy')
             self.biases['bHidden2'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load('data/lexicon_bias_outClass.npy')
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_outClass.npy')
             self.biases['outClass'] = tf.Variable(savedMatrix)
 
         
@@ -53,21 +63,22 @@ class TraditionalLexiconNet:
         
         #initialize
         self.sess.run(self.init)
-    def saveMatrixToFile():
+
+    def saveMatrixToFile(self):
         saveMatrix = self.sess.run(self.weights['projection'])
-        np.save('data/lexicon_weight_projection', saveMatrix)
+        np.save(self.networkPathPrefix + 'lexicon_weight_projection', saveMatrix)
         saveMatrix = self.sess.run(self.weights['hidden1'])
-        np.save('data/lexicon_weight_hidden1', saveMatrix)
+        np.save(self.networkPathPrefix + 'lexicon_weight_hidden1', saveMatrix)
         saveMatrix = self.sess.run(self.weights['hidden2'])
-        np.save('data/lexicon_weight_hidden2', saveMatrix)
+        np.save(self.networkPathPrefix + 'lexicon_weight_hidden2', saveMatrix)
         saveMatrix = self.sess.run(self.weights['outClass'])
-        np.save('data/lexicon_weight_outClass', saveMatrix)
+        np.save(self.networkPathPrefix + 'lexicon_weight_outClass', saveMatrix)
         saveMatrix = self.sess.run(self.biases['bHidden1'])
-        np.save('data/lexicon_bias_bHidden1', saveMatrix)
+        np.save(self.networkPathPrefix + 'lexicon_bias_bHidden1', saveMatrix)
         saveMatrix = self.sess.run(self.biases['bHidden2'])
-        np.save('data/lexicon_bias_bHidden2', saveMatrix)
+        np.save(self.networkPathPrefix + 'lexicon_bias_bHidden2', saveMatrix)
         saveMatrix = self.sess.run(self.biases['outClass'])
-        np.save('data/lexicon_bias_outClass', saveMatrix)
+        np.save(self.networkPathPrefix + 'lexicon_bias_outClass', saveMatrix)
 
 
 
