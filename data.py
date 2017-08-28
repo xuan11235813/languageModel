@@ -34,7 +34,7 @@ class SentencePair:
 
 
 class ReadData:
-	def __init__(self):
+	def __init__(self, measure = 0):
 		# these are inner parameters
 		self.sourceVocab = []
 		self.targetVocab = []
@@ -69,11 +69,18 @@ class ReadData:
 		self.targetVocabFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTargetVocabFilePath())
 		self.readTargetDictionaryClass(self.targetVocabFilePath)
 
-		self.IBM1DataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetIBMFilePath())
-		self.readIBM1Data(self.IBM1DataFilePath)
+		
 		# 
-		self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTrainingDataFilePath())
-		self.readTrainDataBatch(self.trainingDataFilePath)
+		if measure == 0:
+
+			self.IBM1DataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetIBMFilePath())
+			self.readIBM1Data(self.IBM1DataFilePath)
+			self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTrainingDataFilePath())
+			self.readTrainDataBatch(self.trainingDataFilePath)
+		else:
+			self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetMeasureDataFilePath())
+			self.readMeasureDataBatch(self.trainingDataFilePath)
+
 
 		
 
@@ -231,6 +238,51 @@ class ReadData:
 			print("training files do not exist")
 			self.alert += 1
 		return batchReady
+	def readMeasureDataBatch(self, filePath):
+		_allSource = 0
+		_allTarget = 0
+		sourceAbnormal = 0
+		targetAbnormal = 0
+		try:
+			self.trainFile = open(filePath, "r")
+			while True:
+				line = self.trainFile.readline()
+				if line  = '':
+					break;
+				item = []
+				sentencePair = SentencePair()
+				for sentence in line.split('#'):
+					item.append(sentence)
+				for word in item[0].rstrip().split(' '):
+					returnValue = self.findSourceVocabIndex(word)
+					_allSource += 1
+					if returnValue != -1:
+						sentencePair._source.append(returnValue)
+					else:
+						sourceAbnormal+= 1
+				for word in item[1].rstrip().split(' '):
+					returnValue = self.findTargetVocabIndexAndClass(word)
+					_allTarget += 1
+					if returnValue[0] != -1:
+						innerClass = self.targetWordClassSet[int(returnValue[1])].index(word)
+						sentencePair._innerClassIndex.append(innerClass)
+						sentencePair._target.append(returnValue[0])
+						sentencePair._targetClass.append(returnValue[1])
+
+					else:
+						targetAbnormal += 1
+
+				if sentencePair.checkSentence() == 0:
+					self.trainingSentence.append(sentencePair)
+			#print('target training data with noise: ' + str(targetAbnormal/float(_allTarget)))
+			#print('source training data with noise: ' + str(sourceAbnormal/float(_allSource)))
+			
+			self.trainFileCurrentPosition = self.trainFile.tell()
+
+		except IOError as err:
+			print("training files do not exist")
+			self.alert += 1
+			
 	def getTargetClassSetSize(self):
 		targetClassSet = []
 		for i in self.targetWordClassSet:

@@ -5,12 +5,11 @@ import numpy as np
 import os.path
 
 class TraditionalLexiconNet:
-    def __init__(self, targetClassSetSize, continue_pre = 0):
+    def __init__(self, continue_pre = 0):
         #parameter
         self.weights = {}
         self.biases = {}
         self.netPara = para.Para.LexiconNeuralNetwork()
-        self.classSetSize = targetClassSetSize
 
 
         #network
@@ -28,10 +27,10 @@ class TraditionalLexiconNet:
             self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
             self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
             self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
-            self.weights['outClass'] = tf.Variable(tf.random_normal(self.netPara.GetClassLayer()))
+            self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetClassLayer()))
             self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
             self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
-            self.biases['outClass'] = tf.Variable(tf.random_normal([self.netPara.GetClassLayer()[1]]))
+            self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetClassLayer()[1]]))
         else:
             savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_projection.npy')
             self.weights['projection'] = tf.Variable(savedMatrix)           
@@ -39,14 +38,14 @@ class TraditionalLexiconNet:
             self.weights['hidden1'] = tf.Variable(savedMatrix)            
             savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden2.npy')
             self.weights['hidden2'] = tf.Variable(savedMatrix)
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_outClass.npy')
-            self.weights['outClass'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_out.npy')
+            self.weights['out'] = tf.Variable(savedMatrix)            
             savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden1.npy')
             self.biases['bHidden1'] = tf.Variable(savedMatrix)            
             savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden2.npy')
             self.biases['bHidden2'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_outClass.npy')
-            self.biases['outClass'] = tf.Variable(savedMatrix)
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_out.npy')
+            self.biases['out'] = tf.Variable(savedMatrix)
 
         
         # placeholder
@@ -71,14 +70,14 @@ class TraditionalLexiconNet:
         np.save(self.networkPathPrefix + 'lexicon_weight_hidden1', saveMatrix)
         saveMatrix = self.sess.run(self.weights['hidden2'])
         np.save(self.networkPathPrefix + 'lexicon_weight_hidden2', saveMatrix)
-        saveMatrix = self.sess.run(self.weights['outClass'])
-        np.save(self.networkPathPrefix + 'lexicon_weight_outClass', saveMatrix)
+        saveMatrix = self.sess.run(self.weights['out'])
+        np.save(self.networkPathPrefix + 'lexicon_weight_out', saveMatrix)
         saveMatrix = self.sess.run(self.biases['bHidden1'])
         np.save(self.networkPathPrefix + 'lexicon_bias_bHidden1', saveMatrix)
         saveMatrix = self.sess.run(self.biases['bHidden2'])
         np.save(self.networkPathPrefix + 'lexicon_bias_bHidden2', saveMatrix)
-        saveMatrix = self.sess.run(self.biases['outClass'])
-        np.save(self.networkPathPrefix + 'lexicon_bias_outClass', saveMatrix)
+        saveMatrix = self.sess.run(self.biases['out'])
+        np.save(self.networkPathPrefix + 'lexicon_bias_out', saveMatrix)
 
 
 
@@ -95,17 +94,15 @@ class TraditionalLexiconNet:
         hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
         hiddenLayer2 = tf.nn.sigmoid(hiddenLayer2)
 
-        outClass = tf.add(tf.matmul(hiddenLayer2, self.weights['outClass']),self.biases['outClass'])
-        return outClass, hiddenLayer2
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+        return out, hiddenLayer2
 
-    def networkPrognose(self, sourceTarget, classAndClassIndex):
+    def networkPrognose(self, sourceTarget, lexiconLabel):
         self.output, middleOutput = self.sess.run([self.calculatedProb, self.middle],feed_dict={self.sequence : sourceTarget})
         outProbability = []
 
-        for i in range(len(classAndClassIndex)):
-            classIndex = classAndClassIndex[i][0]
-            innerIndex = classAndClassIndex[i][1]
-            outProbability.append(self.output[i][classIndex])
+        for i in range(len(lexiconLabel)):
+            outProbability.append(self.output[i][lexiconLabel[i]])
         
         return outProbability
 

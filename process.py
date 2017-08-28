@@ -5,7 +5,7 @@ import samples
 import forward_backward as fb 
 import para
 class ProcessTraditional:
-	def __init__( self, targetClassSetSize ):
+	def __init__( self ):
 
 		# configure restart or continue
 		continue_pre = para.Para().ContinueOrRestart()
@@ -13,7 +13,7 @@ class ProcessTraditional:
 		# initialize the networks. lNet for lexicon neural network and 
 		# aNet for alignment network.
 		 
-		self.lNet = lexiconSet.TraditionalLexiconNet(targetClassSetSize, continue_pre)
+		self.lNet = lexiconSet.TraditionalLexiconNet(continue_pre)
 		self.aNet = alignmentSet.TraditionalAlignmentNet(continue_pre)
 		self.generator = samples.GenerateSamples()
 		self.forwardBackward = fb.ForwardBackward()
@@ -34,7 +34,7 @@ class ProcessTraditional:
 		for i in range(len(sentencePairBatch)):
 			sentencePair = sentencePairBatch[i]
 			targetNum, sourceNum = sentencePair.getSentenceSize()
-			samplesLexicon, labelsLexicon = self.generator.getLexiconSamples( sentencePair )
+			samplesLexicon, labelsLexicon = self.generator.getSimpleLexiconSamples( sentencePair )
 			samplesAlignment, labelsAlignment = self.generator.getAlignmentSamples( sentencePair )
 			outputLexicon = sentencePair.getIBMLexiconInitialData()
 			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackwardInitial( outputLexicon, targetNum, sourceNum )
@@ -57,7 +57,7 @@ class ProcessTraditional:
 		for i in range(len(sentencePairBatch)):
 			sentencePair = sentencePairBatch[i]
 			targetNum, sourceNum = sentencePair.getSentenceSize()
-			samplesLexicon, labelsLexicon = self.generator.getLexiconSamples( sentencePair )
+			samplesLexicon, labelsLexicon = self.generator.getSimpleLexiconSamples( sentencePair )
 			samplesAlignment, labelsAlignment = self.generator.getAlignmentSamples( sentencePair )
 			outputLexicon = self.lNet.networkPrognose(samplesLexicon, labelsLexicon)
 			outputAlignment = self.aNet.networkPrognose(samplesAlignment)
@@ -77,8 +77,18 @@ class ProcessTraditional:
 
 		sentencePair = sentencePairBatch[0]
 		targetNum, sourceNum = sentencePair.getSentenceSize()
-		samplesLexicon, labelsLexicon = self.generator.getLexiconSamples( sentencePair )
+		samplesLexicon, labelsLexicon = self.generator.getSimpleLexiconSamples( sentencePair )
 		lexiconLabel= self.generator.getUnitTestlabel(sentencePair)
 		for i in range(30):
 			costLexicon = self.lNet.trainingBatch(samplesLexicon, lexiconLabel)
 			print(costLexicon)
+
+	def processPerplexity(self, sentencePairBatch):
+
+		# initialize a perplexity
+		for i in range(len(sentencePairBatch)):
+			sentencePair = sentencePairBatch[i]
+			# calculate the network result
+			# input the perplexity
+
+		# get result

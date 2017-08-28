@@ -10,6 +10,7 @@ class Para:
 		self.trainingDataFilePath = "data/dev.train"
 		self.IBMDataFilePath = 'data/prob'
 		self.networkStoragePath = 'data/network/'
+		self.measureDataFilePath = 'data/dev'
 
 		#training property
 		self.batchSize = 128
@@ -26,6 +27,8 @@ class Para:
 		return self.continue_pre
 	def GetNetworkStoragePath(self):
 		return self.networkStoragePath
+	def GetMeasureDataFilePath(self):
+		return self.measureDataFilePath
 
 	
 

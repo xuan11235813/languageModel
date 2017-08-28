@@ -10,7 +10,7 @@ class GenerateSamples:
 		self.lexiconNetPara = para.Para.LexiconNeuralNetwork()
 		self.alignmentNetPara = para.Para.AlignmentNeuralNetwork()
 
-	
+	# samples with class and inner class index
 	def getLexiconSamples( self, sentencePair ):
 		self._sentencePair = sentencePair
 		self.targetNum = len(sentencePair._target)
@@ -41,6 +41,36 @@ class GenerateSamples:
 				samples.append(itemSample)
 				labels.append(itemLabel)
 		return samples, labels
+
+	# samples with simplest label (only target index)
+	def getSimpleLexiconSamples(self, sentencePair):
+		self._sentencePair = sentencePair
+		self.targetNum = len(sentencePair._target)
+		self.sourceNum = len(sentencePair._source)
+		samples = []
+		labels = []
+		for i in range(self.targetNum):
+			for j in range(self.sourceNum):
+				lexiconSourceStart = int(j - mt.floor(self.lexiconNetPara.GetLexiconSourceWindowSize()/2))
+				lexiconSourceEnd = int(lexiconSourceStart + self.lexiconNetPara.GetLexiconSourceWindowSize())
+				lexiconTargetStart = int(i - self.lexiconNetPara.GetLexiconTargetWindowSize())
+				lexiconTargetEnd = int(lexiconTargetStart + self.lexiconNetPara.GetLexiconTargetWindowSize())
+				itemSample = []
+
+				for s in range(lexiconSourceStart, lexiconSourceEnd):
+					if (s < 0) | (s >= self.sourceNum):
+						itemSample.append(0)
+					else:
+						itemSample.append(sentencePair._source[s])
+				for t in range(lexiconTargetStart, lexiconTargetEnd):
+					if (t < 0) | (t >= self.targetNum):
+						itemSample.append(0)
+					else:
+						itemSample.append(sentencePair._target[t])
+				samples.append(itemSample)
+				labels.append(i)
+		return samples, labels
+
 
 	def getAlignmentSamples(self, sentencePair):
 		self._sentencePair = sentencePair
