@@ -4,6 +4,8 @@ import alignment_neural_network as alignmentSet
 import samples
 import forward_backward as fb 
 import para
+import perplexity as pp
+
 class ProcessTraditional:
 	def __init__( self ):
 
@@ -17,6 +19,7 @@ class ProcessTraditional:
 		self.aNet = alignmentSet.TraditionalAlignmentNet(continue_pre)
 		self.generator = samples.GenerateSamples()
 		self.forwardBackward = fb.ForwardBackward()
+		self.perplexity = pp.Perplexity()
 
 		self.globalSentenceNum = 0;
 
@@ -86,9 +89,16 @@ class ProcessTraditional:
 	def processPerplexity(self, sentencePairBatch):
 
 		# initialize a perplexity
+		self.perplexity.reInitialize()
+
 		for i in range(len(sentencePairBatch)):
 			sentencePair = sentencePairBatch[i]
-			# calculate the network result
-			# input the perplexity
+			targetNum, sourceNum = sentencePair.getSentenceSize()
+			samplesLexicon, labelsLexicon = self.generator.getSimpleLexiconSamples( sentencePair )
+			samplesAlignment, labelsAlignment = self.generator.getAlignmentSamples( sentencePair )
+			outputLexicon = self.lNet.networkPrognose(samplesLexicon, labelsLexicon)
+			outputAlignment = self.aNet.networkPrognose(samplesAlignment)
+			self.perplexity.addSequence(outputLexicon, outputAlignment, targetNum, sourceNum)
 
 		# get result
+		print(self.perplexity.getPerplexity())

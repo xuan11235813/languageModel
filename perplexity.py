@@ -1,21 +1,33 @@
 import numpy as np
 import math as mt
+import para
 
 
 class Perplexity:
-	def __init__(self):
-		print('choose perplexity')
-		wordNum = 0
-		logProbabilitySum = 0
 
-	def addSequence(self, lexiconProb, alignmentProb):
-		print(len(lexiconProb))
-		print(len(lexiconProb[0]))
-		print(len(alignmentProb))
-		print(len(alignmentProb[0]))
+	def __init__(self):
+		self.alignmentNet = para.Para.AlignmentNeuralNetwork()
+		self.wordNum = 0.0
+		self.logProbabilitySum = 0.0
+
+	def reInitialize(self):
+		self.wordNum = 0.0
+		self.logProbabilitySum = 0.0
+
+	def addSequence(self, lexicon, alignment, targetNum, sourceNum):
+		alignment = np.ndarray.tolist(alignment)
+		center = int(mt.floor(float(len(alignment[0]))/2))
+
+		# for limited the jump
+		jumpLimited = self.alignmentNet.GetJumpLimited()
+		
+
 			
 	def getPerplexity(self):
-		return 0
+		if self.wordNum >= 1:
+			return - self.logProbabilitySum/self.wordNum
+		else:
+			return 0
 
 
 

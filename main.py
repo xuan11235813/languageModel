@@ -2,12 +2,14 @@
 import data
 import process
 
+
 # specify the training epoch
 epochMax = 6
 epoch = 0
 
 # configure the global settings
 recordInterval = 100
+measureInterval = 1
 globalBatch = 0
 measturePerplexity = 0
 
@@ -38,11 +40,17 @@ if _data.checkStatus() == 0:
 				_process.processBatchWithBaumWelch(_data.getCurrentBatch())
 			else:
 				_process.processBatch(_data.getCurrentBatch())
+
+		# for additional function including record the network and 
+		# calculate the perplexity
 		if globalBatch % recordInterval == recordInterval -1 :
 			_process.recordNetwork()
-		globalBatch += 1
-		
 
+		if globalBatch % measureInterval ==  measureInterval -1:
+			_process.processPerplexity(_measureData.getCurrentBatch())
+		globalBatch += 1
+
+		print(len(_measureData.getCurrentBatch()))
 		
 else:
 	print('stop the program')

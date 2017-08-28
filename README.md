@@ -61,3 +61,10 @@ for the following week to 09.07
 		- use previous index(target * state_num) as input,  output as 		indices.
 		- new batch
 
+	to 02.09
+	* debug
+		- bug about baum welch algorithms (without initialial probabilities)
+		- calculate the perpelexity
+		- run
+		- transform to LSTM
+		- add BPE

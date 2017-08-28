@@ -60,7 +60,8 @@ class ReadData:
 
 		# read the config file
 		parameters = para.Para()
-
+		self.parameters = parameters
+		
 		# read source dictionary
 		self.sourceVocabFilePath = os.path.join(os.path.dirname(__file__), parameters.GetSourceVocabFilePath())
 		self.readSourceDictionary(self.sourceVocabFilePath)
@@ -247,7 +248,7 @@ class ReadData:
 			self.trainFile = open(filePath, "r")
 			while True:
 				line = self.trainFile.readline()
-				if line  = '':
+				if line  == '' or len(self.trainingSentence) == self.parameters.GetTestBatchSize():
 					break;
 				item = []
 				sentencePair = SentencePair()
