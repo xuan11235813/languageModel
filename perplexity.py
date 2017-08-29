@@ -43,13 +43,18 @@ class Perplexity:
 						probabiility = alignment[i*sourceNum + j_][center + j -j_]
 					item.append( probabiility * prob[-1][j_] )
 				probItem.append(np.sum(item) * lexicon[(i+1)*sourceNum + j])
+			probItem = np.array(probItem)
+			itemMax = np.max(probItem)
+			self.logProbabilitySum += mt.log(itemMax)
+			probItem = probItem/ itemMax
 			prob.append(probItem)
+
+		print(np.array(prob))
 		logProb = mt.log(np.sum(prob[-1]))
 		self.logProbabilitySum += logProb
 		self.wordNum += targetNum
 
 		
-
 			
 	def getPerplexity(self):
 		if self.wordNum >= 1:
