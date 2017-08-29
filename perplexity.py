@@ -14,12 +14,40 @@ class Perplexity:
 		self.wordNum = 0.0
 		self.logProbabilitySum = 0.0
 
-	def addSequence(self, lexicon, alignment, targetNum, sourceNum):
+	def addSequence(self, lexicon, alignment, alignmentInitial, targetNum, sourceNum):
 		alignment = np.ndarray.tolist(alignment)
 		center = int(mt.floor(float(len(alignment[0]))/2))
 
 		# for limited the jump
 		jumpLimited = self.alignmentNet.GetJumpLimited()
+
+		prob = []
+
+		# here we deal with the initial state probabilities
+		probZero =  lexicon[0:sourceNum]
+		
+		if len(alignmentInitial) != 0:
+			for j in range(sourceNum):
+				probZero[j] *= alignmentInitial[center + j]
+
+		# calculate the initial prob value
+		prob.append( probZero )
+		for i in range(targetNum-1):
+			probItem = []
+			for j in range(sourceNum):
+				item = []
+				for j_ in range(sourceNum):
+					if abs(j-j_) >= jumpLimited:
+						probabiility = 0
+					else:
+						probabiility = alignment[i*sourceNum + j_][center + j -j_]
+					item.append( probabiility * prob[-1][j_] )
+				probItem.append(np.sum(item) * lexicon[(i+1)*sourceNum + j])
+			prob.append(probItem)
+		logProb = mt.log(np.sum(prob[-1]))
+		self.logProbabilitySum += logProb
+		self.wordNum += targetNum
+
 		
 
 			

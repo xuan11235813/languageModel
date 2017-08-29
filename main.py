@@ -9,7 +9,7 @@ epoch = 0
 
 # configure the global settings
 recordInterval = 100
-measureInterval = 1
+measureInterval = 200
 globalBatch = 0
 measturePerplexity = 0
 
@@ -49,8 +49,6 @@ if _data.checkStatus() == 0:
 		if globalBatch % measureInterval ==  measureInterval -1:
 			_process.processPerplexity(_measureData.getCurrentBatch())
 		globalBatch += 1
-
-		print(len(_measureData.getCurrentBatch()))
 		
 else:
 	print('stop the program')

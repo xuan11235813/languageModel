@@ -103,7 +103,6 @@ class TraditionalLexiconNet:
 
         for i in range(len(lexiconLabel)):
             outProbability.append(self.output[i][lexiconLabel[i]])
-        
         return outProbability
 
     def trainingBatch(self, batch_sequence, batch_probabilityClass):

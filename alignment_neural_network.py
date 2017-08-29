@@ -49,10 +49,10 @@ class TraditionalAlignmentNet:
         #placeholder
         self.sess = tf.Session()
         self.sequence = tf.placeholder(tf.int32, [None, self.netPara.GetInputWordNum()])
-        self.probabilityClass = tf.placeholder("float", [None, self.netPara.GetJumpLabelSize()])
+        self.probability = tf.placeholder("float", [None, self.netPara.GetJumpLabelSize()])
         self.pred = self.multilayer_perceptron(self.sequence, self.netPara.GetInputWordNum())
         self.calculatedProb = tf.nn.softmax(self.pred)
-        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probabilityClass,logits=self.pred))
+        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
         self.init = tf.global_variables_initializer();
         
@@ -89,14 +89,36 @@ class TraditionalAlignmentNet:
         outLayer = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
         return outLayer
 
-    def networkPrognose(self, sourceTarget):
+    def networkPrognose(self, sourceTarget, sourceTargetInitial):
+        outInitial = self.sess.run(self.calculatedProb, feed_dict = {self.sequence : [sourceTargetInitial]})
         out = self.sess.run(self.calculatedProb,feed_dict={self.sequence : sourceTarget})
-        return out
+        return out, outInitial
 
-    def trainingBatch(self, batch_sequence, batch_probabilityClass):
+    def trainingBatch(self, batch_sequence, batch_probability):
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequence: batch_sequence,
-                                self.probabilityClass: batch_probabilityClass})
+                                self.probability: batch_probability})
         return c
 
+    def trainingInitialState(self, sequence_initial, probability_initial):
 
+        batch_sequence = []
+        batch_probability = []
+        for i in range(5):
+            batch_sequence.append(sequence_initial)
+            batch_probability.append(probability_initial)
+
+        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequence: batch_sequence,
+                                self.probability: batch_probability})
+
+        return c
+
+    def trainingBatchWithInitial( self, batch_sequence, batch_probability, sequence_initial, probability_initial):
+
+        for i in range(5):
+            batch_sequence.append(sequence_initial)
+            batch_probability.append(probability_initial)
+
+        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequence: batch_sequence,
+                                self.probability: batch_probability})
+        return c
 

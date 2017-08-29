@@ -72,16 +72,25 @@ class ForwardBackward:
 		alignmentGamma = self.selfMatrixNormalization(alignmentGamma, sourceNum)
 		return gamma, alignmentGamma
 
-	def calculateForwardBackward(self, lexicon, alignment, targetNum, sourceNum):
+	def calculateForwardBackward(self, lexicon, alignment, targetNum, sourceNum, alignmentInitial = []):
 
 		alignment = np.ndarray.tolist(alignment)
 		center = int(mt.floor(float(len(alignment[0]))/2))
-		
+		initialProb = alignmentInitial
+		# initial position is 0
 
 		# for limited the jump
 		jumpLimited = self.alignmentNet.GetJumpLimited()
 		forward = []
+
+		# here we deal with the initial state probabilities
 		forwardZero =  lexicon[0:sourceNum]
+		
+		if len(alignmentInitial) != 0:
+			for j in range(sourceNum):
+				forwardZero[j] *= alignmentInitial[center + j]
+
+		# calculate the initial forward value
 		forward.append( forwardZero )
 		for i in range(targetNum-1):
 			forwardItem = []
@@ -116,6 +125,7 @@ class ForwardBackward:
 
 		forward = np.array(forward)
 		backward = np.array(backward)
+
 		gamma = forward * backward
 		gamma = self.selfNormalization(gamma)
 		alignmentGamma = []
@@ -135,6 +145,7 @@ class ForwardBackward:
 				alignmentGamma.append(alignmentGammaItem)
 
 		alignmentGamma = self.selfMatrixNormalization(alignmentGamma, sourceNum)
+
 		return gamma, alignmentGamma
 
 	def selfNormalization( self, anArray ):

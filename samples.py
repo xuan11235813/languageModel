@@ -71,13 +71,12 @@ class GenerateSamples:
 				labels.append(i)
 		return samples, labels
 
-
 	def getAlignmentSamples(self, sentencePair):
 		self._sentencePair = sentencePair
 		self.targetNum = len(sentencePair._target)
 		self.sourceNum = len(sentencePair._source)
 		samples = []
-		labels = []
+		initialSample = []
 		for i in range(self.targetNum - 1):
 			for j in range(self.sourceNum):
 				alignmentSourceStart = int(j - mt.floor(self.alignmentNetPara.GetAlignmentSourceWindowSize()/2))
@@ -85,7 +84,6 @@ class GenerateSamples:
 				alignmentTargetStart = int(i - self.alignmentNetPara.GetAlignmentTargetWindowSize())
 				alignmentTargetEnd = int(alignmentTargetStart + self.alignmentNetPara.GetAlignmentTargetWindowSize())
 				itemSample = []
-				itemLabel = []
 
 				for s in range(alignmentSourceStart, alignmentSourceEnd):
 					if (s < 0) | (s >= self.sourceNum):
@@ -97,20 +95,26 @@ class GenerateSamples:
 						itemSample.append(0)
 					else:
 						itemSample.append(sentencePair._target[t])
-				itemLabel.append(sentencePair._targetClass[i])
-				itemLabel.append(sentencePair._innerClassIndex[i])
+
 				samples.append(itemSample)
-				labels.append(itemLabel)
-		return samples, labels
+		sampleSize = self.alignmentNetPara.GetAlignmentSourceWindowSize() + self.alignmentNetPara.GetAlignmentTargetWindowSize()
+		for i in range(sampleSize):
+			initialSample.append(0)
+
+		return samples, initialSample
 		
 	def getLabelFromGamma( self, alignmentGamma, lexiconGamma, sentencePair):
 		alignmentLabel = np.zeros([(self.targetNum - 1) * self.sourceNum, self.alignmentNetPara.GetJumpLabelSize()])
+		initialAlignmentLabel = np.zeros(self.alignmentNetPara.GetJumpLabelSize())
 		lexiconLabel = np.zeros([self.targetNum * self.sourceNum, self.lexiconNetPara.GetClassLabelSize()])
 		center = int(self.alignmentNetPara.GetJumpLabelSize()/2)
+		
+		# create lexicon label
 		for i in range(self.targetNum):
 			for j in range(self.sourceNum):
 				lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = lexiconGamma[i][j]
 
+		# create alignment label
 		jumpLimited = self.alignmentNetPara.GetJumpLimited()
 		for i in range(self.targetNum  - 1):
 			for j in range(self.sourceNum):
@@ -118,8 +122,11 @@ class GenerateSamples:
 					if abs(j_ -j) <= jumpLimited:
 						alignmentLabel[i*self.sourceNum + j][j_ - j + center] = alignmentGamma[i*self.sourceNum +j][j_]
 
+		# initial state probability
+		for i in range(center, min(self.alignmentNetPara.GetJumpLabelSize(), center + self.sourceNum)):
+			initialAlignmentLabel[i] = lexiconGamma[0][i - center]
 
-		return lexiconLabel, alignmentLabel
+		return lexiconLabel, alignmentLabel, initialAlignmentLabel
 
 	def getUnitTestlabel(self, sentencePair):
 		alignmentLabel = np.zeros([(self.targetNum - 1) * self.sourceNum, self.alignmentNetPara.GetJumpLabelSize()])

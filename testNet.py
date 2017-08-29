@@ -5,9 +5,8 @@ import samples
 import forward_backward as fb 
 
 _data = data.ReadData()
-targetClassSetSize = _data.getTargetClassSetSize()
 
-net = ll.TraditionalLexiconNet(targetClassSetSize)
+net = ll.TraditionalLexiconNet()
 net2 = al.TraditionalAlignmentNet()
 FB = fb.ForwardBackward()
 
@@ -23,20 +22,19 @@ b = [[804, 16],[1504, 16],[1504, 16]]
 p = samples.GenerateSamples()
 test = _data.trainingSentence[1];
 targetNum, sourceNum = test. getSentenceSize()
-print('fuck2')
-samples, labels = p.getLexiconSamples(test)
-samples2, _ = p.getAlignmentSamples(test)
 
-print('fuck3')
+samples, labels = p.getSimpleLexiconSamples(test)
+samples2, initial = p.getAlignmentSamples(test)
+
+
 
 o = net.networkPrognose(samples,labels)
-o1 = net2.networkPrognose(samples2)
+o1, _ = net2.networkPrognose(samples2,initial)
 
-print(o)
-print(o1)
+
 gamma1, gamm2 = FB.calculateForwardBackward(o,o1, targetNum, sourceNum)
-print('haha')
+
 print(gamma1)
-print('hhaha')
+
 print(gamm2)
 
