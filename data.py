@@ -102,6 +102,8 @@ class ReadData:
 			print('insufficient input data file')
 		else:
 			print('vocabulary and first batch ready')
+
+			
 	def recordCurrentTrainPosition(self):
 		self.log.writeRecordInformation(self.trainFileCurrentPosition)
 

@@ -31,7 +31,6 @@ if _data.checkStatus() == 0:
 	batchStatus = 0
 	while True:
 		
-		
 		_log.writeSequence('epoch ' + repr(epoch) + ' batch: '+ repr(globalBatch))
 		_log.writeSequence('---------------------------------------')
 		batchStatus = _data.refreshNewBatch()
