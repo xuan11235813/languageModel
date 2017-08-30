@@ -3,6 +3,7 @@ import sys
 import para
 import os
 import numpy as np
+import printLog
 
 class SentencePair:
 
@@ -35,6 +36,9 @@ class SentencePair:
 
 class ReadData:
 	def __init__(self, measure = 0):
+
+		self.log = printLog.Log()
+
 		# these are inner parameters
 		self.sourceVocab = []
 		self.targetVocab = []
@@ -77,7 +81,7 @@ class ReadData:
 			self.IBM1DataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetIBMFilePath())
 			self.readIBM1Data(self.IBM1DataFilePath)
 			self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetTrainingDataFilePath())
-			self.readTrainDataBatch(self.trainingDataFilePath)
+			self.readTrainDataBatch(self.trainingDataFilePath, self.parameters.ContinueOrRestart())
 		else:
 			self.trainingDataFilePath = os.path.join(os.path.dirname(__file__), parameters.GetMeasureDataFilePath())
 			self.readMeasureDataBatch(self.trainingDataFilePath)
@@ -98,6 +102,9 @@ class ReadData:
 			print('insufficient input data file')
 		else:
 			print('vocabulary and first batch ready')
+	def recordCurrentTrainPosition(self):
+		self.log.writeRecordInformation(self.trainFileCurrentPosition)
+
 	def findSourceVocabIndex( self, word ):
 		value = -1
 		try:
@@ -142,11 +149,16 @@ class ReadData:
 			print("target vocabulary files do not exist")
 			self.alert += 1
 
-	def readTrainDataBatch(self, filePath):
+	def readTrainDataBatch(self, filePath, continue_pre = 0):
 		_allSource = 0
 		_allTarget = 0
 		sourceAbnormal = 0
 		targetAbnormal = 0
+
+		if continue_pre != 0:
+			pos = self.log.readRecordInformation()
+			self.trainFileCurrentPosition = pos
+
 		try:
 			self.trainFile = open(filePath, "r")
 			for index in range(128):

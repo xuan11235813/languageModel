@@ -87,7 +87,7 @@ class ForwardBackward:
 		forwardZero =  lexicon[0:sourceNum]
 		
 		if len(alignmentInitial) != 0:
-			for j in range(sourceNum):
+			for j in range(min(sourceNum, center)):
 				forwardZero[j] *= alignmentInitial[center + j]
 
 		# calculate the initial forward value

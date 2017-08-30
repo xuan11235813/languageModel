@@ -5,6 +5,7 @@ import samples
 import forward_backward as fb 
 import para
 import perplexity as pp
+import printLog
 
 class ProcessTraditional:
 	def __init__( self ):
@@ -20,6 +21,7 @@ class ProcessTraditional:
 		self.generator = samples.GenerateSamples()
 		self.forwardBackward = fb.ForwardBackward()
 		self.perplexity = pp.Perplexity()
+		self.log = printLog.Log()
 
 		self.globalSentenceNum = 0;
 
@@ -61,18 +63,19 @@ class ProcessTraditional:
 			costLexicon = self.lNet.trainingBatch(samplesLexicon, lexiconLabel)
 			
 			# use data training alignment neural network
-			costAlignment = self.aNet.trainingBatch(samplesAlignment, alignmentLabel)
-			costInitial = self.aNet.trainingInitialState(sampleInitial, alignmentLabelInitial)
+			# costAlignment = self.aNet.trainingBatch(samplesAlignment, alignmentLabel)
+			# costInitial = self.aNet.trainingInitialState(sampleInitial, alignmentLabelInitial)
+			costAlignment = self.aNet.trainingBatchWithInitial(samplesAlignment, alignmentLabel, sampleInitial, alignmentLabelInitial)
 			
 			# output the result
 			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
 			averageCostAlignment = (averageCostAlignment * i + costAlignment)/(i+1)
-			averageCostAlignmentInitialState = (averageCostAlignmentInitialState * i + costInitial)/(i+1)
+			# averageCostAlignmentInitialState = (averageCostAlignmentInitialState * i + costInitial)/(i+1)
 			self.globalSentenceNum += 1
 
-		print('costLexicon:   '+ repr(averageCostLexicon))
-		print('costAlignment: '+ repr(averageCostAlignment))
-		print('costInitial: '+ repr(averageCostAlignmentInitialState))
+		self.log.writeSequence('costLexicon:  '+ repr(averageCostLexicon))
+		self.log.writeSequence('costAlignment: '+ repr(averageCostAlignment))
+		# self.log.writeSequence('costInitial: '+ repr(averageCostAlignmentInitialState))
 
 
 	def processBatch( self,  sentencePairBatch):
@@ -103,19 +106,22 @@ class ProcessTraditional:
 			# gamma[0] is our updated initial state probabilities
 			lexiconLabel, alignmentLabel, alignmentLabelInitial  = self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
 			
+
 			# train the network
 			costLexicon = self.lNet.trainingBatch(samplesLexicon, lexiconLabel)
-			costAlignment = self.aNet.trainingBatch(samplesAlignment, alignmentLabel)
-			costInitial = self.aNet.trainingInitialState(sampleInitial, alignmentLabelInitial)
-
+			# costAlignment = self.aNet.trainingBatch(samplesAlignment, alignmentLabel)
+			# costInitial = self.aNet.trainingInitialState(sampleInitial, alignmentLabelInitial)
+			costAlignment = self.aNet.trainingBatchWithInitial(samplesAlignment, alignmentLabel, sampleInitial, alignmentLabelInitial)
+			
+			# output the result
 			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
 			averageCostAlignment = (averageCostAlignment * i + costAlignment)/(i+1)
-			averageCostAlignmentInitialState = (averageCostAlignmentInitialState * i + costInitial)/(i+1)
+			# averageCostAlignmentInitialState = (averageCostAlignmentInitialState * i + costInitial)/(i+1)
 			self.globalSentenceNum += 1
 
-		print('costLexicon:   '+ repr(averageCostLexicon))
-		print('costAlignment: '+ repr(averageCostAlignment))
-		print('costInitial: '+ repr(averageCostAlignmentInitialState))
+		self.log.writeSequence('costLexicon:  '+ repr(averageCostLexicon))
+		self.log.writeSequence('costAlignment: '+ repr(averageCostAlignment))
+		# self.log.writeSequence('costInitial: '+ repr(averageCostAlignmentInitialState))
 
 	def processUnitLexiconTest(self, sentencePairBatch):
 		averageCostLexicon = 0;
@@ -141,5 +147,6 @@ class ProcessTraditional:
 			outputLexicon = self.lNet.networkPrognose(samplesLexicon, labelsLexicon)
 			outputAlignment, outputAlignmentInitial = self.aNet.networkPrognose(samplesAlignment, sampleInitial)
 			self.perplexity.addSequence(outputLexicon, outputAlignment, outputAlignmentInitial, targetNum, sourceNum)
+		
 		# get result
-		print(self.perplexity.getPerplexity())
+		self.log.writeSequence('perplexity:  '+ repr(self.perplexity.getPerplexity()))

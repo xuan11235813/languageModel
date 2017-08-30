@@ -1,8 +1,11 @@
 
 class Para:
 	def __init__(self):
-		#general configuration
-		self.continue_pre = 0
+
+		# general configuration
+		# if read network from files
+		self.continue_pre = 1
+
 
 		#for source data file
 		self.sourceVocabFilePath = "data/sourceVocab"
@@ -14,7 +17,8 @@ class Para:
 
 		#training property
 		self.batchSize = 128
-		self.testBatchSize = 300
+		self.testBatchSize = 40
+
 	
 	def GetSourceVocabFilePath(self):
 		return self.sourceVocabFilePath
@@ -32,6 +36,10 @@ class Para:
 		return self.measureDataFilePath
 	def GetTestBatchSize(self):
 		return self.testBatchSize
+	def ReadTrainingFile(self):
+		return 0
+	def ReadTestFile(self):
+		return 1
 
 
 	#for lexicon neural network

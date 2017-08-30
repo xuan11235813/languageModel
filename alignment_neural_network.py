@@ -113,10 +113,11 @@ class TraditionalAlignmentNet:
         return c
 
     def trainingBatchWithInitial( self, batch_sequence, batch_probability, sequence_initial, probability_initial):
-
+        batch_probability = np.array(batch_probability)
         for i in range(5):
             batch_sequence.append(sequence_initial)
-            batch_probability.append(probability_initial)
+            batch_probability = np.append(batch_probability, np.array([probability_initial]), axis = 0)
+            #batch_probability.append(probability_initial)
 
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequence: batch_sequence,
                                 self.probability: batch_probability})
