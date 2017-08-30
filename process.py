@@ -95,7 +95,7 @@ class ProcessTraditional:
 			samplesLexicon, labelsLexicon = self.generator.getSimpleLexiconSamples( sentencePair )
 			
 			# generate alignment samples, sampleInitial is the initial distribution of path (initial state distribution)
-			amplesAlignment, sampleInitial = self.generator.getAlignmentSamples( sentencePair )
+			samplesAlignment, sampleInitial = self.generator.getAlignmentSamples( sentencePair )
 			
 			# use network to produce the probabilities
 			outputLexicon = self.lNet.networkPrognose(samplesLexicon, labelsLexicon)

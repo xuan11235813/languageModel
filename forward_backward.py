@@ -76,7 +76,7 @@ class ForwardBackward:
 
 		alignment = np.ndarray.tolist(alignment)
 		center = int(mt.floor(float(len(alignment[0]))/2))
-		initialProb = alignmentInitial
+
 		# initial position is 0
 
 		# for limited the jump
@@ -88,7 +88,7 @@ class ForwardBackward:
 		
 		if len(alignmentInitial) != 0:
 			for j in range(min(sourceNum, center)):
-				forwardZero[j] *= alignmentInitial[center + j]
+				forwardZero[j] *= alignmentInitial[0][center + j]
 
 		# calculate the initial forward value
 		forward.append( forwardZero )
