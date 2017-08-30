@@ -8,7 +8,7 @@ parameter = para.Para()
 
 # specify the training epoch
 epochMax = 6
-epoch = 0
+epoch = 1
 
 # configure the global settings
 recordInterval = 20
