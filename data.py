@@ -105,7 +105,7 @@ class ReadData:
 
 			
 	def recordCurrentTrainPosition(self):
-		self.log.writeRecordInformation(self.trainFileCurrentPosition)
+		self.log.writeRecordInformation(repr(self.trainFileCurrentPosition))
 
 	def findSourceVocabIndex( self, word ):
 		value = -1
