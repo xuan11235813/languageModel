@@ -70,7 +70,6 @@ class Perplexity:
 		logProb = self.calculateLog(np.sum(prob[-1]))
 		self.addLog(logProb)
 		self.wordNum += targetNum
-		print(self.getPerplexity())
 
 		
 			

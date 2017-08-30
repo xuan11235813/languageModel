@@ -149,4 +149,5 @@ class ProcessTraditional:
 			self.perplexity.addSequence(outputLexicon, outputAlignment, outputAlignmentInitial, targetNum, sourceNum)
 		
 		# get result
+		print('perplexity:  '+ repr(self.perplexity.getPerplexity()))
 		self.log.writeSequence('perplexity:  '+ repr(self.perplexity.getPerplexity()))
