@@ -32,6 +32,7 @@ class ProcessTraditional:
 		self.lNet.saveMatrixToFile()
 		self.aNet.saveMatrixToFile()
 		
+		
 	def processBatchWithBaumWelch( self, sentencePairBatch):
 		averageCostAlignment = 0;
 		averageCostLexicon = 0;

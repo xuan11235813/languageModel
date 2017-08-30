@@ -54,6 +54,7 @@ if _data.checkStatus() == 0:
 		# calculate the perplexity
 		if globalBatch % recordInterval == recordInterval -1 :
 			_process.recordNetwork()
+			_data.recordCurrentTrainPosition()
 
 		if globalBatch % measureInterval ==  measureInterval -1:
 			_process.processPerplexity(_measureData.getCurrentBatch())
