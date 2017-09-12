@@ -45,12 +45,22 @@ weights['hidden'] = tf.Variable(tf.random_normal([1200, 200]))
 
 bias['hidden'] = tf.Variable(tf.random_normal(200))
 
+lstm = tf.contrib.rnn.BasicLSTMCell(1200)
+#initial state
+state = tf.zeros([batch_size, lstm.state_size])
 
 
-def multilayerLSTMNet( sequenceBatch ):
-    concatVector = tf.nn.embedding_lookup(weights['projection'], sequenceBatch)
-    concatVector = tf.reshape(concatVector, [-1, 1200])
+def multilayerLSTMNet( sequenceBatch, batch_size ):
     
+    lstm = tf.contrib.rnn.BasicLSTMCell(1200)
+    #initial state
+    state = tf.zeros([batch_size, lstm.state_size])
+    
+    concatVector = tf.nn.egmbedding_lookup(weights['projection'], sequenceBatch)
+    concatVector = tf.reshape(concatVector, [-1, 1200])
+    output, state = lstm(concatVector, state)
+
+
 
 sess = tf.Session()
 sequence = tf.placeholder(tf.int32, [None, 6])
