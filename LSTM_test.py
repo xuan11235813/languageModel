@@ -15,7 +15,7 @@ trainingSentencesBatch = [
                     ]
 
 
-trainingLabel = np.zeros([9,200])
+trainingLabel = np.zeros([9,20])
 trainingLabel[0][3] = 1
 trainingLabel[1][2] = 1
 trainingLabel[2][1] = 1
@@ -29,10 +29,16 @@ trainingLabel[8][1] = 1
 '''
 sentences: 6 words, batch size = 9 [9 * 6]
 
-use projection layer and concatenate the obtained array [9 * 6 * 200] -> [9 * 1200]
+use projection layer get array [9 * 6 * 200]
 projection matrix [5000, 200]
 
-hidden network lstm, then use output to calculate the matrix multiplication [1200 * 200]
+for each word in a sentence (which includes 6 words) calculate the lstm
+
+use the previous output as the current status
+
+after finishing the calculation add the results which leads to [9 * 200]
+
+calculate the matrix multiplication [1200 * 200]
 hidden matrix [1200 * 200]
 hidden bias [200 * 1]
 
@@ -41,24 +47,22 @@ calculate cross entropy
 
 
 weights['projection'] = tf.Variable(tf.random_normal([5000,200]))
-weights['hidden'] = tf.Variable(tf.random_normal([1200, 200]))
+weights['hidden'] = tf.Variable(tf.random_normal([200, 20]))
 
-bias['hidden'] = tf.Variable(tf.random_normal(200))
-
-lstm = tf.contrib.rnn.BasicLSTMCell(1200)
-#initial state
-state = tf.zeros([batch_size, lstm.state_size])
+bias['hidden'] = tf.Variable(tf.random_normal(20))
 
 
 def multilayerLSTMNet( sequenceBatch, batch_size ):
     
-    lstm = tf.contrib.rnn.BasicLSTMCell(1200)
+    lstm = tf.contrib.rnn.BasicLSTMCell(200)
     #initial state
     state = tf.zeros([batch_size, lstm.state_size])
-    
-    concatVector = tf.nn.egmbedding_lookup(weights['projection'], sequenceBatch)
-    concatVector = tf.reshape(concatVector, [-1, 1200])
+
+    concatVector = tf.nn.embedding_lookup(weights['projection'], sequenceBatch)
+
+
     output, state = lstm(concatVector, state)
+
 
 
 
