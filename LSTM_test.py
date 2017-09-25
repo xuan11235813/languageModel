@@ -44,28 +44,60 @@ hidden bias [200 * 1]
 
 calculate cross entropy
 '''
-
+weights = {}
+bias = {}
 
 weights['projection'] = tf.Variable(tf.random_normal([5000,200]))
 weights['hidden'] = tf.Variable(tf.random_normal([200, 20]))
-
-bias['hidden'] = tf.Variable(tf.random_normal(20))
+bias['hidden'] = tf.Variable(tf.random_normal([20]))
 
 
 def multilayerLSTMNet( sequenceBatch, batch_size ):
     
+    outputForward = []
+    outputBackward = []
+    concatOutput = []
     lstm = tf.contrib.rnn.BasicLSTMCell(200)
     #initial state
-    state = tf.zeros([batch_size, lstm.state_size])
+    stateBackward = stateForward = tf.zeros([batch_size, lstm.state_size])
 
     concatVector = tf.nn.embedding_lookup(weights['projection'], sequenceBatch)
 
+    for i in range(6):
+        outputSlice, stateForward = lstm(concatVector[:,i,:], stateForward)
+        outputForward.append(outputSlice)
 
-    output, state = lstm(concatVector, state)
+    for i in range(6):
+        outputSlice, stateBackward = lstm(concatVector[:,5 - i,:], stateBackward)
+        outputBackward.append(outputSlice)
 
+    for i in range(6):
+        concatOutput.append(tf.add(outputForward[i] + outputBackward[5 - i]))
+
+    readyToProcess = concatOutput[0]
+    out = tf.add(tf.matmul(readyToProcess, weights['projection']),bias['hidden'])
+    return out
 
 
 
 sess = tf.Session()
 sequence = tf.placeholder(tf.int32, [None, 6])
-probability = tf.placeholder("float", [None, 200])
+probability = tf.placeholder("float", [None, 20])
+pred = multilayerLSTMNet(sequence, 9)
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=pred))
+optimizer = tf.train.AdamOptimizer(learning_rate= 0.02).minimize(cost)
+def trainingBatch(self, sequenceBatch, batch_probabilityClass):
+        _, c = self.sess.run([optimizer, cost], feed_dict={sequence: sequenceBatch,
+                                probability: batch_probabilityClass})
+        return c
+
+
+init = tf.global_variables_initializer();
+
+
+
+sess.run(init)
+
+for i in range(20):
+    cost = trainingBatch(trainingSentencesBatch, trainingLabel)
+    print(cost)

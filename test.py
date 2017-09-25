@@ -112,7 +112,7 @@ try:
 except IOError as err:
 	print("target vocabulary files do not exist")
 	self.alert += 1
-'''
+
 def testFunction(s = 0):
 	if s == 0:
 		print('hey baby')
@@ -139,4 +139,35 @@ print(len(b[0]))
 testFunction()
 testFunction(1)
 
+'''
 
+projection = tf.Variable(tf.random_normal([500,200,10]))
+
+
+init = tf.global_variables_initializer();
+
+sess = tf.Session()       
+        #initialize
+sess.run(init)
+
+print(sess.run(projection[1,:]))
+
+print(len(sess.run(projection[1,:])))	
+print(len(sess.run(projection[1,:,2])))
+print(sess.run(projection[:,2,:]))	
+
+result = []
+
+for i in range(3):
+	result.append(projection[1,1,:])
+
+tfResult = tf.stack(result)
+
+tfFinal = tf.concat(result, 0)
+
+tfSelect = [result[i] for i in [1,2]]
+tfFinalSelect = tf.concat(tfSelect, 0)
+print(sess.run(tfResult))
+print(sess.run(tfFinal))
+print(sess.run(tfFinalSelect))
+print(sess.run(tf.add(tfSelect[0], tfSelect[1])))
