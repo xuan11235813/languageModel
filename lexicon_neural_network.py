@@ -110,5 +110,6 @@ class TraditionalLexiconNet:
                                 self.probabilityClass: batch_probabilityClass})
         return c
 
-
+class LSTMLexiconNet:
+    
 
