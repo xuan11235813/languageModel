@@ -142,7 +142,7 @@ testFunction(1)
 '''
 
 projection = tf.Variable(tf.random_normal([500,200,10]))
-
+print(projection.get_shape())
 
 init = tf.global_variables_initializer();
 
