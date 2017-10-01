@@ -65,6 +65,7 @@ class ReadData:
 		# read the config file
 		parameters = para.Para()
 		self.parameters = parameters
+		self.bias = parameters.GetTargetSourceBias()
 		
 		# read source dictionary
 		self.sourceVocabFilePath = os.path.join(os.path.dirname(__file__), parameters.GetSourceVocabFilePath())

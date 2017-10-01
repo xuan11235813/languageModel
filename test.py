@@ -139,7 +139,6 @@ print(len(b[0]))
 testFunction()
 testFunction(1)
 
-'''
 
 projection = tf.Variable(tf.random_normal([500,200,10]))
 print(projection.get_shape())
@@ -171,3 +170,23 @@ print(sess.run(tfResult))
 print(sess.run(tfFinal))
 print(sess.run(tfFinalSelect))
 print(sess.run(tf.add(tfSelect[0], tfSelect[1])))
+
+
+'''
+class testCase:
+	def __init__ (self, mode = ''):
+		if mode == 'lstm':
+			self.a = 'a'
+			print('hello lstm')
+		elif mode == 'rnn':
+			self.b = 'b'
+			print('hello rnn')
+		else:
+			print('hello')
+			self.c = 'c'
+	def helloa(self):
+		print(self.a)
+	def hellob(self):
+		print(self.b)
+	def helloc(self):
+		print(self.c)

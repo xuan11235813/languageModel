@@ -7,8 +7,10 @@ class GenerateSamples:
 		print('ready to generate samples')
 		self.targetNum = 0
 		self.sourceNum = 0
-		self.lexiconNetPara = para.Para.LexiconNeuralNetwork()
-		self.alignmentNetPara = para.Para.AlignmentNeuralNetwork()
+		parameters = para.Para()
+		self.lexiconNetPara = parameters.LexiconNeuralNetwork()
+		self.alignmentNetPara = parameters.AlignmentNeuralNetwork()
+		self.bias = parameters.GetTargetSourceBias()
 
 	# samples with class and inner class index
 	def getLexiconSamples( self, sentencePair ):
@@ -35,7 +37,7 @@ class GenerateSamples:
 					if (t < 0) | (t >= self.targetNum):
 						itemSample.append(0)
 					else:
-						itemSample.append(sentencePair._target[t])
+						itemSample.append(sentencePair._target[t] + self.bias)
 				itemLabel.append(sentencePair._targetClass[i])
 				itemLabel.append(sentencePair._innerClassIndex[i])
 				samples.append(itemSample)
@@ -66,7 +68,7 @@ class GenerateSamples:
 					if (t < 0) | (t >= self.targetNum):
 						itemSample.append(0)
 					else:
-						itemSample.append(sentencePair._target[t])
+						itemSample.append(sentencePair._target[t] + self.bias)
 				samples.append(itemSample)
 				labels.append(i)
 		return samples, labels
@@ -94,7 +96,7 @@ class GenerateSamples:
 					if (t < 0) | (t >= self.targetNum):
 						itemSample.append(0)
 					else:
-						itemSample.append(sentencePair._target[t])
+						itemSample.append(sentencePair._target[t] + self.bias)
 
 				samples.append(itemSample)
 		sampleSize = self.alignmentNetPara.GetAlignmentSourceWindowSize() + self.alignmentNetPara.GetAlignmentTargetWindowSize()
@@ -106,7 +108,7 @@ class GenerateSamples:
 	def getLabelFromGamma( self, alignmentGamma, lexiconGamma, sentencePair):
 		alignmentLabel = np.zeros([(self.targetNum - 1) * self.sourceNum, self.alignmentNetPara.GetJumpLabelSize()])
 		initialAlignmentLabel = np.zeros(self.alignmentNetPara.GetJumpLabelSize())
-		lexiconLabel = np.zeros([self.targetNum * self.sourceNum, self.lexiconNetPara.GetClassLabelSize()])
+		lexiconLabel = np.zeros([self.targetNum * self.sourceNum, self.lexiconNetPara.GetLabelSize()])
 		center = int(self.alignmentNetPara.GetJumpLabelSize()/2)
 		
 		# create lexicon label
@@ -130,7 +132,7 @@ class GenerateSamples:
 
 	def getUnitTestlabel(self, sentencePair):
 		alignmentLabel = np.zeros([(self.targetNum - 1) * self.sourceNum, self.alignmentNetPara.GetJumpLabelSize()])
-		lexiconLabel = np.zeros([self.targetNum * self.sourceNum, self.lexiconNetPara.GetClassLabelSize()])
+		lexiconLabel = np.zeros([self.targetNum * self.sourceNum, self.lexiconNetPara.GetLabelSize()])
 		center = int(self.alignmentNetPara.GetJumpLabelSize()/2)
 		for i in range(self.targetNum):
 			for j in range(self.sourceNum):
