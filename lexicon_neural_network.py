@@ -113,13 +113,13 @@ class TraditionalLexiconNet:
 
 class LSTMLexiconNet:
     def __init__(self, continue_pre = 0):
-        #parameter
+        # parameter
         self.weights = {}
         self.biases = {}
         self.netPara = para.Para.LexiconNeuralNetwork('lstm')
 
 
-        #network
+        # network
         parameter = para.Para()
         self.networkPathPrefix = parameter.GetNetworkStoragePath()
 
@@ -128,6 +128,9 @@ class LSTMLexiconNet:
         if os.path.exists(testPath) == False:
             print('previous does not exist, start with random')
             continue_pre = 0
+        # basic parameters
+        self.sourceNum = 0
+        self.targetNum = 0
 
 
         if (continue_pre == 0):
@@ -158,14 +161,84 @@ class LSTMLexiconNet:
         # placeholder
         # for common words
         self.sess = tf.Session()
-        self.sequence = tf.placeholder(tf.int32, [None, self.netPara.GetInputWordNum()])
-        self.probabilityClass = tf.placeholder("float", [None, self.netPara.GetLabelSize()])
-        self.pred, self.middle = self.multilayer_perceptron(self.sequence, self.netPara.GetInputWordNum())
+        self.sentence = tf.placeholder(tf.int32, [None])
+        self.probability = tf.placeholder("float", [None, self.netPara.GetLabelSize()])
+        self.pred = self.multilayerLSTMNetForOneSentence(self.sentence)
         self.calculatedProb = tf.nn.softmax(self.pred)
-        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probabilityClass,logits=self.pred))
+        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
         self.init = tf.global_variables_initializer();
 
         
         #initialize
         self.sess.run(self.init)
+
+
+    def saveMatrixToFile(self):
+        saveMatrix = self.sess.run(self.weights['projection'])
+        np.save(self.networkPathPrefix + 'lexicon_weight_projection', saveMatrix)
+        saveMatrix = self.sess.run(self.weights['hidden1'])
+        np.save(self.networkPathPrefix + 'lexicon_weight_hidden1', saveMatrix)
+        saveMatrix = self.sess.run(self.weights['hidden2'])
+        np.save(self.networkPathPrefix + 'lexicon_weight_hidden2', saveMatrix)
+        saveMatrix = self.sess.run(self.weights['out'])
+        np.save(self.networkPathPrefix + 'lexicon_weight_out', saveMatrix)
+        saveMatrix = self.sess.run(self.biases['bHidden1'])
+        np.save(self.networkPathPrefix + 'lexicon_bias_bHidden1', saveMatrix)
+        saveMatrix = self.sess.run(self.biases['bHidden2'])
+        np.save(self.networkPathPrefix + 'lexicon_bias_bHidden2', saveMatrix)
+        saveMatrix = self.sess.run(self.biases['out'])
+        np.save(self.networkPathPrefix + 'lexicon_bias_out', saveMatrix)
+
+    def setSourceTarget(sourceNum, targetNum):
+        self.sourceNum = sourceNum
+        self.targetNum = targetNum
+
+    def multilayerLSTMNetForOneSentence(sequence):
+
+        outputSourceForward = []
+        outputSourceBackward = []
+        outputTargetForward = []
+        concatOutput = []
+
+        cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
+        #initial state
+        stateSourceBackward = stateSourceForward = stateTargetForward = cell.zero_state(1, tf.float32)
+        concatVector = tf.nn.embedding_lookup(weights['projection'], [sequence])
+        print(concatVector.get_shape())
+        with tf.variable_scope("RNN"):
+            for i in range(self.sourceNum):
+                if i > 0:
+                    tf.get_variable_scope().reuse_variables()
+                outputSlice, stateSourceForward = cell(concatVector[:,i,:], stateSourceForward)
+                outputSourceForward.append(outputSlice)
+
+            for i in range(self.sourceNum):
+                if i > 0:
+                    tf.get_variable_scope().reuse_variables()
+                outputSlice, stateSourceBackward = cell(concatVector[:,self.sourceNum - i - 1,:], stateSourceBackward)
+                outputSourceBackward.insert(0, outputSlice)
+
+            for i in range(self.targetNum):
+                if i > 0:
+                    tf.get_variable_scope().reuse_variables()
+                outputSlice, stateTargetForward = cell(concatVector[:,self.sourceNum + i,:], stateTargetForward)
+                outputTargetForward.append(outputSlice)
+
+        for i in range(self.targetNum):
+            for j in range(sourceNum):
+                item = tf.concat( [tf.add(outputSourceForward[j] , outputSourceForward[j]), outputTargetForward[i] ] , 1)
+                item = tf.reshape(item, [-1]);
+                concatOutput.append(item)
+        readyToProcess = tf.stack(concatOutput)
+
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.nn.sigmoid(hiddenLayer1)
+
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
+        hiddenLayer2 = tf.nn.sigmoid(hiddenLayer2)
+
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+
+
+        return out
