@@ -89,10 +89,10 @@ class TraditionalLexiconNet:
         #concatVector = tf.nn.embedding_lookup(self.weights['projection'], sourceTarget)
         #concatVector = tf.reshape(concatVector ,[-1,1600])
         hiddenLayer1 = tf.add(tf.matmul(concatVector, self.weights['hidden1']), self.biases['bHidden1'])
-        hiddenLayer1 = tf.nn.sigmoid(hiddenLayer1)
+        hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
 
         hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
-        hiddenLayer2 = tf.nn.sigmoid(hiddenLayer2)
+        hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
         out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
         return out, hiddenLayer2
@@ -190,9 +190,6 @@ class LSTMLexiconNet:
         saveMatrix = self.sess.run(self.biases['out'])
         np.save(self.networkPathPrefix + 'lexicon_bias_out', saveMatrix)
 
-    def setSourceTarget(sourceNum, targetNum):
-        self.sourceNum = sourceNum
-        self.targetNum = targetNum
 
     def multilayerLSTMNetForOneSentence(sequence):
 
@@ -233,10 +230,10 @@ class LSTMLexiconNet:
         readyToProcess = tf.stack(concatOutput)
 
         hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
-        hiddenLayer1 = tf.nn.sigmoid(hiddenLayer1)
+        hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
 
         hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
-        hiddenLayer2 = tf.nn.sigmoid(hiddenLayer2)
+        hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
         out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
 

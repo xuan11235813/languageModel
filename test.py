@@ -195,7 +195,7 @@ print(sess.run(tfFinal))
 print(sess.run(tfFinalSelect))
 print(sess.run(tf.add(tfSelect[0], tfSelect[1])))
 
-
+'''
 #-------------------------condition test-------------------------------------
 sess = tf.Session()
 
@@ -204,26 +204,25 @@ a = tf.Variable([[3,3],[3,3]])
 def if_true():
 	return tf.matmul(a,a)
 
-def if_false():
-	return tf.add(a,a)
-
+def if_false():return tf.add(a,a)
 x = tf.placeholder(tf.int32)
 y = tf.placeholder(tf.int32)
 init = tf.global_variables_initializer();
 
-result = tf.cond( tf.less(x,y), if_true, if_false)
 #result = tf.cond(tf.less(x,y), lambda: tf.matmul(a,a), lambda: tf.add(a,a))
+result = tf.cond( tf.less(x,y), if_true, if_false)
 sess.run(init)
 print(sess.run(a))
 p = sess.run([result], feed_dict={x:3, y:4} )
 print(p)
-'''
 
-#-----------------------while-loop-test-----------------------------------
+'''
+#-----------------------basic-while-loop-test-----------------------------------
 
 sess = tf.Session()
 i0 = tf.constant(0)
 m0 = tf.ones([2,2])
+toAdd0 = tf.ones([1,2])
 i_max = tf.constant(10)
 
 c = lambda i, m: i<10
@@ -244,6 +243,8 @@ r = tf.while_loop(
 	tf.TensorShape([None, 2]), 
 	i_max.get_shape()])
 
+
+
 init = tf.global_variables_initializer()
 sess.run(init)
 
@@ -251,3 +252,59 @@ print(sess.run(r)[0])
 print(len(sess.run(r)[1]))
 print(sess.run(r)[2])
 
+
+
+#-----------------advanced-while-loop-test------------------------
+
+sess = tf.Session()
+i0 = tf.constant(0)
+i_Max = tf.constant(10)
+j_Max = tf.constant(10)
+m0 = tf.ones([0,2])
+mAdd0 = tf.ones([1,2])
+mp = tf.ones([200,2])
+s = 1
+
+def bodySource(j, jMax, m, mAdd):
+	j = tf.add(j, 1)
+	mAdd = tf.add(mAdd, s)
+	mAppendix = mp[tf.subtract(j,1), :]
+	m = tf.concat([m, mAdd, [mAppendix]], 0)
+	return j, jMax, m, mAdd
+
+def condSource(j, jMax, m, mAdd):
+	return tf.less(j, jMax)
+
+
+def condTarget(i, iMax, jMax, m, mAdd):
+	return tf.less(i, iMax)
+
+def bodyTarget(i, iMax, jMax, m, mAdd):
+
+	j0 = tf.constant(0)
+	sourceLoop = tf.while_loop(
+		condSource, 
+		bodySource,
+		loop_vars = [j0, jMax, m, mAdd],
+		shape_invariants = [
+		j0.get_shape(),
+		jMax.get_shape(),
+		tf.TensorShape([None, 2]),
+		mAdd.get_shape()])
+	i = tf.add(i,1)
+	m = sourceLoop[2]
+	return i, iMax, jMax, m, mAdd 
+
+targetLoop = tf.while_loop(
+	condTarget,
+	bodyTarget,
+	loop_vars = [i0, i_Max, j_Max, m0, mAdd0],
+	shape_invariants = [
+	i0.get_shape(),
+	i_Max.get_shape(),
+	j_Max.get_shape(),
+	tf.TensorShape([None, 2]),
+	mAdd0.get_shape()])
+
+print(sess.run(targetLoop)[3])
+'''

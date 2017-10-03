@@ -92,6 +92,9 @@ def multilayerLSTMNet( sequenceBatch, batch_size ):
     out = tf.add(tf.matmul(readyToProcess, weights['hidden']),bias['hidden'])
     return out
 
+
+
+
 # input only one sentence with uncertain length
 def multilayerLSTMNetForOneSentence(sequence, sourceNum, targetNum):
 
@@ -103,9 +106,93 @@ def multilayerLSTMNetForOneSentence(sequence, sourceNum, targetNum):
     cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
     #initial state
     stateSourceBackward = stateSourceForward = stateTargetForward = cell.zero_state(1, tf.float32)
+    print(stateSourceForward[0].get_shape())
+    print(stateSourceForward[1].get_shape())
     concatVector = tf.nn.embedding_lookup(weights['projection'], [sequence])
-    print(concatVector.get_shape())
     with tf.variable_scope("RNN"):
+        for i in range(3):
+            print(i)
+            if i > 0:
+                tf.get_variable_scope().reuse_variables()
+            outputSlice, stateSourceForward = cell(concatVector[:,i,:], stateSourceForward)
+            outputSourceForward.append(outputSlice)
+
+        for i in range(3):
+            print(3 - i - 1)
+            if i > 0:
+                tf.get_variable_scope().reuse_variables()
+            outputSlice, stateSourceBackward = cell(concatVector[:,3 - i - 1,:], stateSourceBackward)
+            outputSourceBackward.insert(0, outputSlice)
+
+        for i in range(3):
+            print(3 + i)
+            if i > 0:
+                tf.get_variable_scope().reuse_variables()
+            outputSlice, stateTargetForward = cell(concatVector[:,3 + i,:], stateTargetForward)
+            outputTargetForward.append(outputSlice)
+
+    for i in range(3):
+        for j in range(3):
+            item = tf.concat( [tf.add(outputSourceForward[j] , outputSourceForward[j]), outputTargetForward[i] ] , 1)
+            item = tf.reshape(item, [-1]);
+            concatOutput.append(item)
+    readyToProcess = tf.stack(concatOutput)
+    out = tf.add(tf.matmul(readyToProcess, weights['hiddenSequence']),bias['hidden'])
+    print('------------------end process--------------------')
+    return out
+
+
+
+
+# input only one sentence with uncertain length( placeholder )
+def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum):
+    
+    _outputSourceForward = tf.zeros([0,200])
+    _outputSourceBackward = tf.zeros([0,200])
+    _outputTargetForward = tf.zeros([0,200])
+    _concatOutput = tf.zeros([0,400])
+
+    cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
+    #initial state
+    zeroState  = cell.zero_state(1, tf.float32)
+    concatVector = tf.nn.embedding_lookup(weights['projection'], [sequence])
+    _stateC = zeroState[0]
+    _stateH = zeroState[1]
+    i0 = tf.constant(0)
+    j0 = tf.constant(0)
+    _output = tf.zeros([0,200])
+    # source forward part
+    def sourceForwardBody(i, sourceNum, stateC, stateH, output):
+
+        state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
+        outputSlice, state = cell(concatVector[:,i,:], state)
+        output = tf.concat([output, outputSlice])
+        stateC = state[0]
+        stateH = state[1]
+        i = tf.add(i, 1)
+        return i, sourceNum, stateC, stateH, output
+    def sourceForwardCond(i, sourceNum, stateC, stateH, output):
+        return  tf.less(i, sourceNum)
+
+    # source backward part
+    def sourceBackwardBody(i, sourceNum, stateC, stateH, output):
+        state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
+        outputSlice, state = cell(concatVector[:,tf.subtract(sourceNum, tf.add(i,1)),:], state)
+        output = tf.concat([outputSlice, output])
+        stateC = state[0]
+        stateH = state[1]
+        i = tf.add(i,1)
+        return i, sourceNum, stateC, stateH, output
+    def sourceBackwardCond(i, sourceNum, stateC, stateH, output):
+        return  tf.less(i, sourceNum)
+
+    # target forward part
+    def targetForwardBody(i, targetNum, stateC, stateH, output):
+        state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
+        outputSlice, state = cell(concatVector[:,tf.add(),:], state)
+    with tf.variable_scope("RNN"):
+
+
         for i in range(3):
             print(i)
             if i > 0:
