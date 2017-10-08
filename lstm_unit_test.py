@@ -189,31 +189,52 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
     # target forward part
     def targetForwardBody(i, targetNum, stateC, stateH, output):
         state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
-        outputSlice, state = cell(concatVector[:,tf.add(),:], state)
+        outputSlice, state = cell(concatVector[:,tf.add(_sourceNum, i),:], state)
+        output = tf.concat([output, outputSlice])
+        stateC = state[0]
+        stateH = state[1]
+        i = tf.add(i,1)
+        return i, targetNum, stateC, stateH, output
+    def targetForwardCond(i, targetNum, stateC, stateH, output):
+        return tf.less(i, targetNum)
     with tf.variable_scope("RNN"):
 
+        sourceForwardLoop = tf.while_loop(
+            sourceForwardCond,
+            sourceForwardBody,
+            loop_vars = [i0, _sourceNum, _stateC, _stateH, _output],
+            shape_invariants = [
+            i0.get_shape(),
+            _sourceNum.get_shape(),
+            _stateC.get_shape(),
+            _stateH.get_shape(),
+            tf.TensorShape([None, 200])])
+        outputSourceForward = sourceForwardLoop[4]
 
-        for i in range(3):
-            print(i)
-            if i > 0:
-                tf.get_variable_scope().reuse_variables()
-            outputSlice, stateSourceForward = cell(concatVector[:,i,:], stateSourceForward)
-            outputSourceForward.append(outputSlice)
+        sourceBackwardLoop = tf.while_loop(
+            sourceForwardCond,
+            sourceBackwardBody,
+            loop_vars = [i0, _sourceNum, _stateC, _stateH, _output],
+            shape_invariants = [
+            i0.get_shape(),
+            _sourceNum.get_shape(),
+            _stateC.get_shape(),
+            _stateH.get_shape(),
+            tf.TensorShape([None, 200])])
+        outputSourceBackward = sourceBackwardLoop[4]
 
-        for i in range(3):
-            print(3 - i - 1)
-            if i > 0:
-                tf.get_variable_scope().reuse_variables()
-            outputSlice, stateSourceBackward = cell(concatVector[:,3 - i - 1,:], stateSourceBackward)
-            outputSourceBackward.insert(0, outputSlice)
-
-        for i in range(3):
-            print(3 + i)
-            if i > 0:
-                tf.get_variable_scope().reuse_variables()
-            outputSlice, stateTargetForward = cell(concatVector[:,3 + i,:], stateTargetForward)
-            outputTargetForward.append(outputSlice)
-
+        targetForwardLoop = tf.while_loop(
+            targetForwardCond,
+            targetForwardBody,
+            loop_vars = [i0, _targetNum, _stateC, _stateH, _output],
+            shape_invariants = [
+            i0.get_shape(),
+            _targetNum.get_shape(),
+            _stateC.get_shape(),
+            _stateH.get_shape(),
+            tf.TensorShape([None, 200])])
+        outputTargetForward = targetForwardLoop[4]
+        
     for i in range(3):
         for j in range(3):
             item = tf.concat( [tf.add(outputSourceForward[j] , outputSourceForward[j]), outputTargetForward[i] ] , 1)
