@@ -191,43 +191,134 @@ class LSTMLexiconNet:
         np.save(self.networkPathPrefix + 'lexicon_bias_out', saveMatrix)
 
 
-    def multilayerLSTMNetForOneSentence(sequence):
+    def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum):
 
-        outputSourceForward = []
-        outputSourceBackward = []
-        outputTargetForward = []
-        concatOutput = []
+        _concatOutput = tf.zeros([0,400])
 
         cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
         #initial state
-        stateSourceBackward = stateSourceForward = stateTargetForward = cell.zero_state(1, tf.float32)
+        zeroState  = cell.zero_state(1, tf.float32)
         concatVector = tf.nn.embedding_lookup(weights['projection'], [sequence])
-        print(concatVector.get_shape())
-        with tf.variable_scope("RNN"):
-            for i in range(self.sourceNum):
-                if i > 0:
-                    tf.get_variable_scope().reuse_variables()
-                outputSlice, stateSourceForward = cell(concatVector[:,i,:], stateSourceForward)
-                outputSourceForward.append(outputSlice)
+        _stateC = zeroState[0]
+        _stateH = zeroState[1]
+        i0 = tf.constant(0)
+        j0 = tf.constant(0)
+        _output = tf.zeros([0,200])
+        # source forward part
+        def sourceForwardBody(i, sourceNum, stateC, stateH, output):
 
-            for i in range(self.sourceNum):
-                if i > 0:
-                    tf.get_variable_scope().reuse_variables()
-                outputSlice, stateSourceBackward = cell(concatVector[:,self.sourceNum - i - 1,:], stateSourceBackward)
-                outputSourceBackward.insert(0, outputSlice)
+            state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
+            outputSlice, state = cell(concatVector[:,i,:], state)
+            output = tf.concat([output, outputSlice],0)
+            stateC = state[0]
+            stateH = state[1]
+            i = tf.add(i, 1)
+            return i, sourceNum, stateC, stateH, output
+        def sourceForwardCond(i, sourceNum, stateC, stateH, output):
+            return  tf.less(i, sourceNum)
 
-            for i in range(self.targetNum):
-                if i > 0:
-                    tf.get_variable_scope().reuse_variables()
-                outputSlice, stateTargetForward = cell(concatVector[:,self.sourceNum + i,:], stateTargetForward)
-                outputTargetForward.append(outputSlice)
+        # source backward part
+        def sourceBackwardBody(i, sourceNum, stateC, stateH, output):
+            state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
+            outputSlice, state = cell(concatVector[:,tf.subtract(sourceNum, tf.add(i,1)),:], state)
+            output = tf.concat([outputSlice, output],0)
+            stateC = state[0]
+            stateH = state[1]
+            i = tf.add(i,1)
+            return i, sourceNum, stateC, stateH, output
+        def sourceBackwardCond(i, sourceNum, stateC, stateH, output):
+            return  tf.less(i, sourceNum)
 
-        for i in range(self.targetNum):
-            for j in range(sourceNum):
-                item = tf.concat( [tf.add(outputSourceForward[j] , outputSourceForward[j]), outputTargetForward[i] ] , 1)
-                item = tf.reshape(item, [-1]);
-                concatOutput.append(item)
-        readyToProcess = tf.stack(concatOutput)
+        # target forward part
+        def targetForwardBody(i, targetNum, stateC, stateH, output):
+            state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
+            outputSlice, state = cell(concatVector[:,tf.add(_sourceNum, i),:], state)
+            output = tf.concat([output, outputSlice],0)
+            stateC = state[0]
+            stateH = state[1]
+            i = tf.add(i,1)
+            return i, targetNum, stateC, stateH, output
+        def targetForwardCond(i, targetNum, stateC, stateH, output):
+            return tf.less(i, targetNum)
+
+
+
+        with tf.variable_scope("RNNPlaceholder"):
+
+            sourceForwardLoop = tf.while_loop(
+                sourceForwardCond,
+                sourceForwardBody,
+                loop_vars = [i0, _sourceNum, _stateC, _stateH, _output],
+                shape_invariants = [
+                i0.get_shape(),
+                _sourceNum.get_shape(),
+                _stateC.get_shape(),
+                _stateH.get_shape(),
+                tf.TensorShape([None, 200])])
+            outputSourceForward = sourceForwardLoop[4]
+
+            sourceBackwardLoop = tf.while_loop(
+                sourceForwardCond,
+                sourceBackwardBody,
+                loop_vars = [i0, _sourceNum, _stateC, _stateH, _output],
+                shape_invariants = [
+                i0.get_shape(),
+                _sourceNum.get_shape(),
+                _stateC.get_shape(),
+                _stateH.get_shape(),
+                tf.TensorShape([None, 200])])
+            outputSourceBackward = sourceBackwardLoop[4]
+
+            targetForwardLoop = tf.while_loop(
+                targetForwardCond,
+                targetForwardBody,
+                loop_vars = [i0, _targetNum, _stateC, _stateH, _output],
+                shape_invariants = [
+                i0.get_shape(),
+                _targetNum.get_shape(),
+                _stateC.get_shape(),
+                _stateH.get_shape(),
+                tf.TensorShape([None, 200])])
+            outputTargetForward = targetForwardLoop[4]
+
+        # sample generation part, which means add the source forward and back 
+        # back forward, then concat it to target forward
+        def genSourceBody(i, j, sourceNum, output):
+            item = tf.concat([tf.add(outputSourceForward[j, :], outputSourceBackward[j, :]), outputTargetForward[i,:]], 0)
+            item = tf.reshape(item, [-1]);
+            output = tf.concat([output, [item]], 0)
+            j = tf.add(j, 1)
+            return i, j, sourceNum, output
+        def genSourceCond(i, j, sourceNum, output):
+            return tf.less(j, sourceNum)
+
+        def genTargetBody(i, targetNum, sourceNum, output):
+            sourceLoop = tf.while_loop(
+                genSourceCond,
+                genSourceBody,
+                loop_vars = [i, j0, sourceNum, output],
+                shape_invariants = [
+                i.get_shape(),
+                j0.get_shape(),
+                sourceNum.get_shape(),
+                tf.TensorShape([None, 400])])
+            output = sourceLoop[3]
+            i = tf.add(i,1)
+            return i, targetNum, sourceNum, output
+
+        def genTargetCond(i, targetNum, sourceNum, output):
+            return tf.less(i,targetNum)
+        targetLoop = tf.while_loop(
+            genTargetCond,
+            genTargetBody,
+            loop_vars = [i0, _targetNum, _sourceNum, _concatOutput],
+            shape_invariants = [
+            i0.get_shape(),
+            _targetNum.get_shape(),
+            _sourceNum.get_shape(),
+            tf.TensorShape([None, 400])])
+
+        readyToProcess = targetLoop[3]
 
         hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
         hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
@@ -236,6 +327,5 @@ class LSTMLexiconNet:
         hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
         out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
-
 
         return out

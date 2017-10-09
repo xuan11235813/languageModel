@@ -156,10 +156,7 @@ def multilayerLSTMNetForOneSentence(sequence, sourceNum, targetNum):
 
 # input only one sentence with uncertain length( placeholder )
 def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum):
-    
-    _outputSourceForward = tf.zeros([0,200])
-    _outputSourceBackward = tf.zeros([0,200])
-    _outputTargetForward = tf.zeros([0,200])
+
     _concatOutput = tf.zeros([0,400])
 
     cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
