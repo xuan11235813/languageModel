@@ -162,8 +162,10 @@ class LSTMLexiconNet:
         # for common words
         self.sess = tf.Session()
         self.sentence = tf.placeholder(tf.int32, [None])
+        self.sourceNumPlace = tf.placeholder(tf.int32)
+        self.targetNumPlace = tf.placeholder(tf.int32)
         self.probability = tf.placeholder("float", [None, self.netPara.GetLabelSize()])
-        self.pred = self.multilayerLSTMNetForOneSentence(self.sentence)
+        self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sentence, self.sourceNumPlace, self.targetNumPlace)
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
@@ -191,7 +193,7 @@ class LSTMLexiconNet:
         np.save(self.networkPathPrefix + 'lexicon_bias_out', saveMatrix)
 
 
-    def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum):
+    def multilayerLSTMNetForOneSentencePlaceholder(self, sequence, _sourceNum, _targetNum):
 
         _concatOutput = tf.zeros([0,400])
 
@@ -329,3 +331,19 @@ class LSTMLexiconNet:
         out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
 
         return out
+    def networkPrognose(self, sentence, lexiconLabel, _sourceNum, _targetNum):
+        self.output = self.sess.run([self.calculatedProb],feed_dict={self.sentence : sentence,
+            self.sourceNumPlace : _sourceNum,
+            self.targetNumPlace : _targetNum})
+        outProbability = []
+
+        for i in range(len(lexiconLabel)):
+            outProbability.append(self.output[i][lexiconLabel[i]])
+        return outProbability
+
+    def trainingBatch(self, sentence, batch_probability, _sourceNum, _targetNum):
+        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sentence: sentence,
+                                self.probability: batch_probability,
+                                self.sourceNumPlace : _sourceNum,
+                                self.targetNumPlace : _targetNum})
+        return c
