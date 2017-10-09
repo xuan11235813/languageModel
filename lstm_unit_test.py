@@ -30,6 +30,16 @@ trainingLabel[7][2] = 1
 trainingLabel[8][1] = 1
 
 
+trainingLabel8 = np.zeros([8,20])
+trainingLabel[0][3] = 1
+trainingLabel[1][2] = 1
+trainingLabel[2][1] = 1
+trainingLabel[3][3] = 1
+trainingLabel[4][2] = 1
+trainingLabel[5][1] = 1
+trainingLabel[6][3] = 1
+trainingLabel[7][2] = 1
+
 '''
 sentences: 6 words, batch size = 9 [9 * 6]
 
@@ -166,7 +176,7 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
 
         state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
         outputSlice, state = cell(concatVector[:,i,:], state)
-        output = tf.concat([output, outputSlice])
+        output = tf.concat([output, outputSlice],0)
         stateC = state[0]
         stateH = state[1]
         i = tf.add(i, 1)
@@ -178,7 +188,7 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
     def sourceBackwardBody(i, sourceNum, stateC, stateH, output):
         state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
         outputSlice, state = cell(concatVector[:,tf.subtract(sourceNum, tf.add(i,1)),:], state)
-        output = tf.concat([outputSlice, output])
+        output = tf.concat([outputSlice, output],0)
         stateC = state[0]
         stateH = state[1]
         i = tf.add(i,1)
@@ -190,14 +200,17 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
     def targetForwardBody(i, targetNum, stateC, stateH, output):
         state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
         outputSlice, state = cell(concatVector[:,tf.add(_sourceNum, i),:], state)
-        output = tf.concat([output, outputSlice])
+        output = tf.concat([output, outputSlice],0)
         stateC = state[0]
         stateH = state[1]
         i = tf.add(i,1)
         return i, targetNum, stateC, stateH, output
     def targetForwardCond(i, targetNum, stateC, stateH, output):
         return tf.less(i, targetNum)
-    with tf.variable_scope("RNN"):
+
+
+
+    with tf.variable_scope("RNNPlaceholder"):
 
         sourceForwardLoop = tf.while_loop(
             sourceForwardCond,
@@ -234,13 +247,45 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
             _stateH.get_shape(),
             tf.TensorShape([None, 200])])
         outputTargetForward = targetForwardLoop[4]
-        
-    for i in range(3):
-        for j in range(3):
-            item = tf.concat( [tf.add(outputSourceForward[j] , outputSourceForward[j]), outputTargetForward[i] ] , 1)
-            item = tf.reshape(item, [-1]);
-            concatOutput.append(item)
-    readyToProcess = tf.stack(concatOutput)
+
+    # sample generation part, which means add the source forward and back 
+    # back forward, then concat it to target forward
+    def genSourceBody(i, j, sourceNum, output):
+        item = tf.concat([tf.add(outputSourceForward[j, :], outputSourceBackward[j, :]), outputTargetForward[i,:]], 0)
+        item = tf.reshape(item, [-1]);
+        output = tf.concat([output, [item]], 0)
+        j = tf.add(j, 1)
+        return i, j, sourceNum, output
+    def genSourceCond(i, j, sourceNum, output):
+        return tf.less(j, sourceNum)
+
+    def genTargetBody(i, targetNum, sourceNum, output):
+        sourceLoop = tf.while_loop(
+            genSourceCond,
+            genSourceBody,
+            loop_vars = [i, j0, sourceNum, output],
+            shape_invariants = [
+            i.get_shape(),
+            j0.get_shape(),
+            sourceNum.get_shape(),
+            tf.TensorShape([None, 400])])
+        output = sourceLoop[3]
+        i = tf.add(i,1)
+        return i, targetNum, sourceNum, output
+
+    def genTargetCond(i, targetNum, sourceNum, output):
+        return tf.less(i,targetNum)
+    targetLoop = tf.while_loop(
+        genTargetCond,
+        genTargetBody,
+        loop_vars = [i0, _targetNum, _sourceNum, _concatOutput],
+        shape_invariants = [
+        i0.get_shape(),
+        _targetNum.get_shape(),
+        _sourceNum.get_shape(),
+        tf.TensorShape([None, 400])])
+
+    readyToProcess = targetLoop[3]
     out = tf.add(tf.matmul(readyToProcess, weights['hiddenSequence']),bias['hidden'])
     print('------------------end process--------------------')
     return out
@@ -251,31 +296,49 @@ sequence = tf.placeholder(tf.int32, [None, None])
 sentence = tf.placeholder(tf.int32, [None])
 sourceNumPlace = tf.placeholder(tf.int32)
 targetNumPlace = tf.placeholder(tf.int32)
-_sourceNum = 3
-_targetNum = 3
+_sourceNum_ = 3
+_targetNum_ = 3
+
 probability = tf.placeholder("float", [None, 20])
 print(probability.get_shape())
 #pred = multilayerLSTMNet(sequence, 9)
-pred = multilayerLSTMNetForOneSentence( sentence, sourceNumPlace,sourceNumPlace )
+pred = multilayerLSTMNetForOneSentence( sentence, sourceNumPlace,targetNumPlace )
+predP = multilayerLSTMNetForOneSentencePlaceholder( sentence, sourceNumPlace,targetNumPlace )
 #cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=pred))
+
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=pred))
+costP = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=predP))
+
 optimizer = tf.train.AdamOptimizer(learning_rate= 0.02).minimize(cost)
+optimizerP = tf.train.AdamOptimizer(learning_rate= 0.02).minimize(costP)
 def trainingBatch(sequenceBatch, batch_probabilityClass):
     _, c = sess.run([optimizer, cost], feed_dict={sequence: sequenceBatch, probability: batch_probabilityClass})
     return c
 def trainingSentence(sequence, batch_probabilityClass):
     _, c = sess.run([optimizer, cost], feed_dict={sentence: sequence, probability: batch_probabilityClass,\
-     sourceNumPlace: _sourceNum, targetNumPlace: _targetNum})
+     sourceNumPlace: _sourceNum_, targetNumPlace: _targetNum_})
     return c
+
+def trainingSentencePlaceholder(sequence, batch_probabilityClass):
+    _, c = sess.run([optimizerP, costP], feed_dict={sentence: sequence, probability: batch_probabilityClass,\
+     sourceNumPlace: _sourceNum_, targetNumPlace: _targetNum_})
+    return c
+
+
 
 init = tf.global_variables_initializer();
 
 
 
 sess.run(init)
-
+'''
 for i in range(20): 
     costValue = trainingSentence(_trainingSentence, trainingLabel)
+    print(costValue)
+'''
+
+for i in range(20): 
+    costValue = trainingSentencePlaceholder(_trainingSentence, trainingLabel)
     print(costValue)
 
 '''
