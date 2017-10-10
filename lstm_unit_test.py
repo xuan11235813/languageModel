@@ -66,6 +66,7 @@ weights['hidden'] = tf.Variable(tf.random_normal([200, 20]))
 weights['hiddenSequence'] = tf.Variable(tf.random_normal([400, 20]))
 bias['hidden'] = tf.Variable(tf.random_normal([20]))
 
+targetSourceBias = 41000
 
 #sentences batch with same length.
 def multilayerLSTMNet( sequenceBatch, batch_size ):
