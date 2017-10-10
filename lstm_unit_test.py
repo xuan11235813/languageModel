@@ -154,7 +154,6 @@ def multilayerLSTMNetForOneSentence(sequence, sourceNum, targetNum):
 
 
 
-
 # input only one sentence with uncertain length( placeholder )
 def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum):
 

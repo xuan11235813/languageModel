@@ -99,9 +99,12 @@ class GenerateSamples:
 						itemSample.append(sentencePair._target[t] + self.bias)
 
 				samples.append(itemSample)
-		sampleSize = self.alignmentNetPara.GetAlignmentSourceWindowSize() + self.alignmentNetPara.GetAlignmentTargetWindowSize()
-		for i in range(sampleSize):
+
+		# generate the whole zero sample
+		for i in range(self.alignmentNetPara.GetAlignmentSourceWindowSize()):
 			initialSample.append(0)
+		for i in range(self.alignmentNetPara.GetAlignmentTargetWindowSize()):
+			initialSample.append(0 + self.bias)
 
 		return samples, initialSample
 		

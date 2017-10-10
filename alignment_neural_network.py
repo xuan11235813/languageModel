@@ -129,8 +129,11 @@ class LSTMAlignmentNet:
         # parameter
         self.weights = {}
         self.biases = {}
+        self.parameter = para.Para()
         self.netPara = para.Para.AlignmentNeuralNetwork('lstm')
-
+        self.sourceTargetBias = self.parameter.GetTargetSourceBias()
+        self.projOutDim = self.netPara.GetProjectionLayer()[1]
+        self.readyToProcessDim = 2 * self.projOutDim
 
          # test for file exists
         testPath =  self.networkPathPrefix + 'alignment_weight_projection.npy'
@@ -176,6 +179,13 @@ class LSTMAlignmentNet:
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
+        
+        # only for zero input
+        self.predInit = self.getLSTMInitial()
+        self.calculatedProbInit = tf.nn.softmax(self.predInit)
+        self.costInit = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.predInit))
+        self.optimizerInit = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.costInit)
+
         self.init = tf.global_variables_initializer();
 
         
@@ -202,17 +212,17 @@ class LSTMAlignmentNet:
 
     def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum):
 
-        _concatOutput = tf.zeros([0,400])
+        _concatOutput = tf.zeros([0,self.readyToProcessDim])
 
-        cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
+        cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
         #initial state
         zeroState  = cell.zero_state(1, tf.float32)
-        concatVector = tf.nn.embedding_lookup(weights['projection'], [sequence])
+        concatVector = tf.nn.embedding_lookup(self.weights['projection'], [sequence])
         _stateC = zeroState[0]
         _stateH = zeroState[1]
         i0 = tf.constant(0)
         j0 = tf.constant(0)
-        _output = tf.zeros([0,200])
+        _output = tf.zeros([0,self.projOutDim])
         # source forward part
         def sourceForwardBody(i, sourceNum, stateC, stateH, output):
 
@@ -263,7 +273,7 @@ class LSTMAlignmentNet:
                 _sourceNum.get_shape(),
                 _stateC.get_shape(),
                 _stateH.get_shape(),
-                tf.TensorShape([None, 200])])
+                tf.TensorShape([None, self.projOutDim])])
             outputSourceForward = sourceForwardLoop[4]
 
             sourceBackwardLoop = tf.while_loop(
@@ -275,7 +285,7 @@ class LSTMAlignmentNet:
                 _sourceNum.get_shape(),
                 _stateC.get_shape(),
                 _stateH.get_shape(),
-                tf.TensorShape([None, 200])])
+                tf.TensorShape([None, self.projOutDim])])
             outputSourceBackward = sourceBackwardLoop[4]
 
             targetForwardLoop = tf.while_loop(
@@ -287,7 +297,7 @@ class LSTMAlignmentNet:
                 _targetNum.get_shape(),
                 _stateC.get_shape(),
                 _stateH.get_shape(),
-                tf.TensorShape([None, 200])])
+                tf.TensorShape([None, self.projOutDim])])
             outputTargetForward = targetForwardLoop[4]
 
         # sample generation part, which means add the source forward and back 
@@ -310,7 +320,7 @@ class LSTMAlignmentNet:
                 i.get_shape(),
                 j0.get_shape(),
                 sourceNum.get_shape(),
-                tf.TensorShape([None, 400])])
+                tf.TensorShape([None, self.readyToProcessDim])])
             output = sourceLoop[3]
             i = tf.add(i,1)
             return i, targetNum, sourceNum, output
@@ -325,7 +335,7 @@ class LSTMAlignmentNet:
             i0.get_shape(),
             _targetNum.get_shape(),
             _sourceNum.get_shape(),
-            tf.TensorShape([None, 400])])
+            tf.TensorShape([None, self.readyToProcessDim])])
 
         readyToProcess = targetLoop[3]
 
@@ -338,21 +348,35 @@ class LSTMAlignmentNet:
         out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
 
         return out
+    
+    def getLSTMInitial(self):
+        cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+        zeroState  = cell.zero_state(2, tf.float32)
+        concatVector = tf.nn.embedding_lookup(weights['projection'], [[0],[self.sourceTargetBias]])
+        outputSlice, _ = cell(concatVector[:,0,:], zeroState)
+        readyToProcess = tf.reshape(outputSlice, [-1])
 
-    def networkPrognose(self, sourceTarget, sourceTargetInitial):
-        outInitial = self.sess.run(self.calculatedProb, feed_dict = {self.sequence : [sourceTargetInitial]})
-        out = self.sess.run(self.calculatedProb,feed_dict={self.sequence : sourceTarget})
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
+
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
+        hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
+
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+
+        return out
+
+    def networkPrognose(self, sequence):
+        outInitial = self.sess.run(self.calculatedProbInit, feed_dict = {})
+        out = self.sess.run(self.calculatedProb,feed_dict={self.sentence : sequence})
         return out, outInitial
 
-    def trainingBatchWithInitial( self, batch_sequence, batch_probability, sequence_initial, probability_initial):
-        batch_probability = np.array(batch_probability)
-        for i in range(5):
-            batch_sequence.append(sequence_initial)
-            batch_probability = np.append(batch_probability, np.array([probability_initial]), axis = 0)
-            #batch_probability.append(probability_initial)
+    def trainingBatchWithInitial( self, sequence, probability, probability_initial):
+        probability = np.array(probability)
 
-        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequence: batch_sequence,
-                                self.probability: batch_probability})
+        _, c = self.sess.run([self.optimizerInit, self.costInit], feed_dict = {self.probability = probability_initial})
+        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sentence: sequence,
+                                self.probability: probability})
         return c
     
 
