@@ -110,6 +110,9 @@ class TraditionalLexiconNet:
                                 self.probabilityClass: batch_probabilityClass})
         return c
 
+# should be noticed that it is really easy to change model to sentence batch
+# take care of the state
+
 
 class LSTMLexiconNet:
     def __init__(self, continue_pre = 0):
@@ -118,11 +121,10 @@ class LSTMLexiconNet:
         self.biases = {}
         self.netPara = para.Para.LexiconNeuralNetwork('lstm')
 
-
         # network
         parameter = para.Para()
         self.networkPathPrefix = parameter.GetNetworkStoragePath()
-
+        self.batchSize = parameter.GetLSTMBatchSize()
         # test for file exists
         testPath =  self.networkPathPrefix + 'lexicon_weight_projection.npy'
         if os.path.exists(testPath) == False:
@@ -161,11 +163,11 @@ class LSTMLexiconNet:
         # placeholder
         # for common words
         self.sess = tf.Session()
-        self.sentence = tf.placeholder(tf.int32, [None])
+        self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
         self.probability = tf.placeholder("float", [None, self.netPara.GetLabelSize()])
-        self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sentence, self.sourceNumPlace, self.targetNumPlace)
+        self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sequenceBatch, self.sourceNumPlace, self.targetNumPlace)
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
@@ -193,14 +195,15 @@ class LSTMLexiconNet:
         np.save(self.networkPathPrefix + 'lexicon_bias_out', saveMatrix)
 
 
-    def multilayerLSTMNetForOneSentencePlaceholder(self, sequence, _sourceNum, _targetNum):
+    def multilayerLSTMNetForOneSentencePlaceholder(self, sequence_batch, _sourceNum, _targetNum):
 
         _concatOutput = tf.zeros([0,400])
 
         cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
         #initial state
-        zeroState  = cell.zero_state(1, tf.float32)
-        concatVector = tf.nn.embedding_lookup(self.weights['projection'], [sequence])
+        zeroState  = cell.zero_state(self.batchSize, tf.float32)
+        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+        # here if you change batchSize from 1 to other value here maybe something wrong.
         _stateC = zeroState[0]
         _stateH = zeroState[1]
         i0 = tf.constant(0)
@@ -339,18 +342,19 @@ class LSTMLexiconNet:
         out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
 
         return out
-    def networkPrognose(self, sentence, lexiconLabel, _sourceNum, _targetNum):
-        self.output = self.sess.run([self.calculatedProb],feed_dict={self.sentence : sentence,
+    def networkPrognose(self, _sequenceBatch, lexiconLabel, _sourceNum, _targetNum):
+
+        self.output = self.sess.run([self.calculatedProb],feed_dict={self.sequenceBatch : _sequenceBatch,
             self.sourceNumPlace : _sourceNum,
             self.targetNumPlace : _targetNum})
         outProbability = []
-        print(len(self.output))
+        out = self.output[0]
         for i in range(len(lexiconLabel)):
-            outProbability.append(self.output[i][lexiconLabel[i]])
+            outProbability.append(out[i][lexiconLabel[i]])
         return outProbability
 
-    def trainingBatch(self, sentence, batch_probability, _sourceNum, _targetNum):
-        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sentence: sentence,
+    def trainingBatch(self, _sequenceBatch, batch_probability, _sourceNum, _targetNum):
+        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequenceBatch: _sequenceBatch,
                                 self.probability: batch_probability,
                                 self.sourceNumPlace : _sourceNum,
                                 self.targetNumPlace : _targetNum})

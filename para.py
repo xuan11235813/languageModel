@@ -42,6 +42,8 @@ class Para:
 		return 1
 	def GetTargetSourceBias(self):
 		return 41000
+	def GetLSTMBatchSize(self):
+		return 1
 
 
 	#for lexicon neural network

@@ -137,6 +137,7 @@ class LSTMAlignmentNet:
 
         parameter = para.Para()
         self.networkPathPrefix = parameter.GetNetworkStoragePath()
+        self.batchSize = parameter.GetLSTMBatchSize()
          # test for file exists
         testPath =  self.networkPathPrefix + 'alignment_weight_projection.npy'
         if os.path.exists(testPath) == False:
@@ -173,11 +174,11 @@ class LSTMAlignmentNet:
         # for common words
 
         self.sess = tf.Session()
-        self.sentence = tf.placeholder(tf.int32, [None])
+        self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
         self.probability = tf.placeholder("float", [None, self.netPara.GetJumpLabelSize()])
-        self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sentence, self.sourceNumPlace, self.targetNumPlace)
+        self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sequenceBatch, self.sourceNumPlace, self.targetNumPlace)
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
@@ -212,14 +213,18 @@ class LSTMAlignmentNet:
         np.save(self.networkPathPrefix + 'alignment_bias_out', saveMatrix)
 
 
-    def multilayerLSTMNetForOneSentencePlaceholder(self, sequence, _sourceNum, _targetNum):
+    def multilayerLSTMNetForOneSentencePlaceholder(self, sequence_batch, _sourceNum, _targetNum):
 
+        # loops only equals targetNum - 1
+        _targetNum = tf.subtract(_targetNum, 1)
         _concatOutput = tf.zeros([0,self.readyToProcessDim])
 
         cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
         #initial state
-        zeroState  = cell.zero_state(1, tf.float32)
-        concatVector = tf.nn.embedding_lookup(self.weights['projection'], [sequence])
+        zeroState  = cell.zero_state(self.batchSize, tf.float32)
+        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+
+        # here if you change batchSize from 1 to other value here maybe something wrong.
         _stateC = zeroState[0]
         _stateH = zeroState[1]
         i0 = tf.constant(0)
@@ -373,16 +378,21 @@ class LSTMAlignmentNet:
 
         return out
 
-    def networkPrognose(self, sequence):
+    def networkPrognose(self, _sequenceBatch,  _sourceNum, _targetNum):
         outInitial = self.sess.run(self.calculatedProbInit, feed_dict = {})
-        out = self.sess.run(self.calculatedProb,feed_dict={self.sentence : sequence})
-        return out, outInitial
 
-    def trainingBatchWithInitial( self, sequence, probability, probability_initial):
+        out = self.sess.run([self.calculatedProb],feed_dict={self.sequenceBatch : _sequenceBatch,
+            self.sourceNumPlace : _sourceNum,
+            self.targetNumPlace : _targetNum})
+
+
+        return out[0], outInitial
+
+    def trainingBatchWithInitial( self, _sequenceBatch, probability, probability_initial):
         probability = np.array(probability)
 
         _, c = self.sess.run([self.optimizerInit, self.costInit], feed_dict = {self.probability :probability_initial})
-        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sentence: sequence,
+        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequenceBatch: _sequenceBatch,
                                 self.probability: probability})
         return c
     

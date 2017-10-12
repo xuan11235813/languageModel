@@ -62,6 +62,15 @@ print('----------------alignment samples-------------')
 print(samples2)
 
 print('--------------network print-----------------')
-outLexicon = lexiconNet.networkPrognose(samples, labels, sourceNum, targetNum)
+outLexicon = lexiconNet.networkPrognose([samples], labels, sourceNum, targetNum)
 
-pinrt(out)
+print(outLexicon)
+print(len(outLexicon))
+
+outAlignment, outAlignmentInitial = alignmentNet.networkPrognose( [samples2], sourceNum, targetNum )
+
+gamma1, gamm2 = FB.calculateForwardBackward(outLexicon,outAlignment, targetNum, sourceNum)
+
+print(gamma1)
+
+print(gamm2)
