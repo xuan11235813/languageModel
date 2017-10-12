@@ -200,7 +200,7 @@ class LSTMLexiconNet:
         cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
         #initial state
         zeroState  = cell.zero_state(1, tf.float32)
-        concatVector = tf.nn.embedding_lookup(weights['projection'], [sequence])
+        concatVector = tf.nn.embedding_lookup(self.weights['projection'], [sequence])
         _stateC = zeroState[0]
         _stateH = zeroState[1]
         i0 = tf.constant(0)
@@ -245,7 +245,7 @@ class LSTMLexiconNet:
 
 
 
-        with tf.variable_scope("RNNPlaceholder"):
+        with tf.variable_scope("RNNLexicon"):
 
             sourceForwardLoop = tf.while_loop(
                 sourceForwardCond,

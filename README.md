@@ -68,3 +68,14 @@ for the following week to 09.07
 		- run
 		- transform to LSTM
 		- add BPE
+
+	to 20.20
+		- finish LSTM and maybe add BPE
+
+
+
+questions:
+
+1) lexicon model: previously we use null sequence as our target input when facing the first sample. Here add a 'zero' start for target word sequence
+
+2) alignment model: previously train the initial input distribution as null sequence, now use the 'zero' start

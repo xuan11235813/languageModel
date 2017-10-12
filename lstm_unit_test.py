@@ -328,17 +328,17 @@ init = tf.global_variables_initializer();
 
 
 sess.run(init)
-'''
+
 for i in range(20): 
     costValue = trainingSentence(_trainingSentence, trainingLabel)
     print(costValue)
-'''
 
+
+'''
 for i in range(20): 
     costValue = trainingSentencePlaceholder(_trainingSentence, trainingLabel)
     print(costValue)
 
-'''
 
 for i in range(20): 
     costValue = trainingBatch(trainingSentencesBatch, trainingLabel)

@@ -153,7 +153,7 @@ class Para:
 			if self.mode == 'lstm':
 				return [self.hiddenLayer1stInput, self.hiddenLayer1stOutput]
 			else:
-				inputNum = (self.lexiconTargetWindowSize + self.lexiconSourceWindowSize) * self.projectionLayerOutputDim
+				inputNum = (self.alignmentSourceWindowSize + self.alignmentTargetWindowSize) * self.projectionLayerOutputDim
 				return [inputNum, self.hiddenLayer1stOutput]
 		def GetHiddenLayer2nd(self):
 			return[self.hiddenLayer1stOutput, self.hiddenLayer2ndOutput]

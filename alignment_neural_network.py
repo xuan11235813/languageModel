@@ -262,7 +262,7 @@ class LSTMAlignmentNet:
 
 
 
-        with tf.variable_scope("RNNPlaceholder"):
+        with tf.variable_scope("RNNAlignment"):
 
             sourceForwardLoop = tf.while_loop(
                 sourceForwardCond,
@@ -374,7 +374,7 @@ class LSTMAlignmentNet:
     def trainingBatchWithInitial( self, sequence, probability, probability_initial):
         probability = np.array(probability)
 
-        _, c = self.sess.run([self.optimizerInit, self.costInit], feed_dict = {self.probability = probability_initial})
+        _, c = self.sess.run([self.optimizerInit, self.costInit], feed_dict = {self.probability :probability_initial})
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sentence: sequence,
                                 self.probability: probability})
         return c
