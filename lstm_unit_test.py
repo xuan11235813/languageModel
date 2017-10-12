@@ -169,8 +169,11 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
     j0 = tf.constant(0)
     _output = tf.zeros([0,200])
     # source forward part
-    def sourceForwardBody(i, sourceNum, stateC, stateH, output):
+    with tf.variable_scope("RNNPlaceholder"):
+        _, state = cell(concatVector[:,0,:], zeroState)
 
+    def sourceForwardBody(i, sourceNum, stateC, stateH, output):
+        tf.get_variable_scope().reuse_variables()
         state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
         outputSlice, state = cell(concatVector[:,i,:], state)
         output = tf.concat([output, outputSlice],0)
@@ -183,6 +186,7 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
 
     # source backward part
     def sourceBackwardBody(i, sourceNum, stateC, stateH, output):
+        tf.get_variable_scope().reuse_variables()
         state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
         outputSlice, state = cell(concatVector[:,tf.subtract(sourceNum, tf.add(i,1)),:], state)
         output = tf.concat([outputSlice, output],0)
@@ -195,6 +199,7 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
 
     # target forward part
     def targetForwardBody(i, targetNum, stateC, stateH, output):
+        tf.get_variable_scope().reuse_variables()
         state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
         outputSlice, state = cell(concatVector[:,tf.add(_sourceNum, i),:], state)
         output = tf.concat([output, outputSlice],0)
@@ -298,16 +303,17 @@ _targetNum_ = 3
 
 probability = tf.placeholder("float", [None, 20])
 print(probability.get_shape())
+'''
 #pred = multilayerLSTMNet(sequence, 9)
 pred = multilayerLSTMNetForOneSentence( sentence, sourceNumPlace,targetNumPlace )
-predP = multilayerLSTMNetForOneSentencePlaceholder( sentence, sourceNumPlace,targetNumPlace )
+
 #cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=pred))
 
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=pred))
-costP = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=predP))
+
 
 optimizer = tf.train.AdamOptimizer(learning_rate= 0.02).minimize(cost)
-optimizerP = tf.train.AdamOptimizer(learning_rate= 0.02).minimize(costP)
+
 def trainingBatch(sequenceBatch, batch_probabilityClass):
     _, c = sess.run([optimizer, cost], feed_dict={sequence: sequenceBatch, probability: batch_probabilityClass})
     return c
@@ -315,7 +321,10 @@ def trainingSentence(sequence, batch_probabilityClass):
     _, c = sess.run([optimizer, cost], feed_dict={sentence: sequence, probability: batch_probabilityClass,\
      sourceNumPlace: _sourceNum_, targetNumPlace: _targetNum_})
     return c
-
+'''
+predP = multilayerLSTMNetForOneSentencePlaceholder( sentence, sourceNumPlace,targetNumPlace )
+costP = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=predP))
+optimizerP = tf.train.AdamOptimizer(learning_rate= 0.02).minimize(costP)
 def trainingSentencePlaceholder(sequence, batch_probabilityClass):
     _, c = sess.run([optimizerP, costP], feed_dict={sentence: sequence, probability: batch_probabilityClass,\
      sourceNumPlace: _sourceNum_, targetNumPlace: _targetNum_})
@@ -328,7 +337,7 @@ init = tf.global_variables_initializer();
 
 
 sess.run(init)
-
+'''
 for i in range(20): 
     costValue = trainingSentence(_trainingSentence, trainingLabel)
     print(costValue)
@@ -338,7 +347,7 @@ for i in range(20):
 for i in range(20): 
     costValue = trainingSentencePlaceholder(_trainingSentence, trainingLabel)
     print(costValue)
-
+'''
 
 for i in range(20): 
     costValue = trainingBatch(trainingSentencesBatch, trainingLabel)

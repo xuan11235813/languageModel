@@ -223,9 +223,12 @@ class LSTMAlignmentNet:
         i0 = tf.constant(0)
         j0 = tf.constant(0)
         _output = tf.zeros([0,self.projOutDim])
+
+        with tf.variable_scope("RNNAlignment"):
+            _, state = cell(concatVector[:,0,:], zeroState)
         # source forward part
         def sourceForwardBody(i, sourceNum, stateC, stateH, output):
-
+            tf.get_variable_scope().reuse_variables()
             state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
             outputSlice, state = cell(concatVector[:,i,:], state)
             output = tf.concat([output, outputSlice],0)
@@ -238,6 +241,7 @@ class LSTMAlignmentNet:
 
         # source backward part
         def sourceBackwardBody(i, sourceNum, stateC, stateH, output):
+            tf.get_variable_scope().reuse_variables()
             state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
             outputSlice, state = cell(concatVector[:,tf.subtract(sourceNum, tf.add(i,1)),:], state)
             output = tf.concat([outputSlice, output],0)
@@ -250,6 +254,7 @@ class LSTMAlignmentNet:
 
         # target forward part
         def targetForwardBody(i, targetNum, stateC, stateH, output):
+            tf.get_variable_scope().reuse_variables()
             state = tf.contrib.rnn.LSTMStateTuple(stateC, stateH)
             outputSlice, state = cell(concatVector[:,tf.add(_sourceNum, i),:], state)
             output = tf.concat([output, outputSlice],0)
