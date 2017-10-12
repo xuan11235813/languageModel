@@ -43,10 +43,25 @@ alignmentNet = al.LSTMAlignmentNet()
 FB = fb.ForwardBackward()
 
 p = samples.GenerateSamples()
-test = _data.trainingSentence[1]
+test = _data.trainingSentence[11]
 targetNum, sourceNum = test. getSentenceSize()
 
-sentence, labels = p.getLSTMLexiconSample(test)
+print(test._source)
+print(test._target)
+print(test._targetClass)
 
-print(sentence)
+samples, labels = p.getLSTMLexiconSample(test)
+samples2 = p.getLSTMAlignmentSample(test)
+print('----------------lexicon samples and labels-------------')
+print(samples)
 print(labels)
+print('-------------length of labels-------------------')
+print(len(labels))
+
+print('----------------alignment samples-------------')
+print(samples2)
+
+print('--------------network print-----------------')
+outLexicon = lexiconNet.networkPrognose(samples, labels, sourceNum, targetNum)
+
+pinrt(out)

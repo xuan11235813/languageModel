@@ -135,6 +135,8 @@ class LSTMAlignmentNet:
         self.projOutDim = self.netPara.GetProjectionLayer()[1]
         self.readyToProcessDim = 2 * self.projOutDim
 
+        parameter = para.Para()
+        self.networkPathPrefix = parameter.GetNetworkStoragePath()
          # test for file exists
         testPath =  self.networkPathPrefix + 'alignment_weight_projection.npy'
         if os.path.exists(testPath) == False:
@@ -210,7 +212,7 @@ class LSTMAlignmentNet:
         np.save(self.networkPathPrefix + 'alignment_bias_out', saveMatrix)
 
 
-    def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum):
+    def multilayerLSTMNetForOneSentencePlaceholder(self, sequence, _sourceNum, _targetNum):
 
         _concatOutput = tf.zeros([0,self.readyToProcessDim])
 
@@ -357,9 +359,9 @@ class LSTMAlignmentNet:
     def getLSTMInitial(self):
         cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
         zeroState  = cell.zero_state(2, tf.float32)
-        concatVector = tf.nn.embedding_lookup(weights['projection'], [[0],[self.sourceTargetBias]])
+        concatVector = tf.nn.embedding_lookup(self.weights['projection'], [[0],[self.sourceTargetBias]])
         outputSlice, _ = cell(concatVector[:,0,:], zeroState)
-        readyToProcess = tf.reshape(outputSlice, [-1])
+        readyToProcess = [tf.reshape(outputSlice, [-1])]
 
         hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
         hiddenLayer1 = tf.nn.tanh(hiddenLayer1)

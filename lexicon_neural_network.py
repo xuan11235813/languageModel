@@ -344,7 +344,7 @@ class LSTMLexiconNet:
             self.sourceNumPlace : _sourceNum,
             self.targetNumPlace : _targetNum})
         outProbability = []
-
+        print(len(self.output))
         for i in range(len(lexiconLabel)):
             outProbability.append(self.output[i][lexiconLabel[i]])
         return outProbability
