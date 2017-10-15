@@ -388,12 +388,14 @@ class LSTMAlignmentNet:
 
         return out[0], outInitial
 
-    def trainingBatchWithInitial( self, _sequenceBatch, probability, probability_initial):
+    def trainingBatchWithInitial( self, _sequenceBatch, probability, probability_initial, _sourceNum, _targetNum):
         probability = np.array(probability)
 
-        _, c = self.sess.run([self.optimizerInit, self.costInit], feed_dict = {self.probability :probability_initial})
+        _, c = self.sess.run([self.optimizerInit, self.costInit], feed_dict = {self.probability :[probability_initial]})
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequenceBatch: _sequenceBatch,
-                                self.probability: probability})
+                                self.probability: probability,
+                                self.sourceNumPlace : _sourceNum,
+                                self.targetNumPlace : _targetNum})
         return c
     
 

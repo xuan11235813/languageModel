@@ -78,43 +78,6 @@ class ProcessTraditional:
 		self.log.writeSequence('costAlignment: '+ repr(averageCostAlignment))
 		# self.log.writeSequence('costInitial: '+ repr(averageCostAlignmentInitialState))
 
-	def processLSTMBatchWithBaumWelch(self, sentencePairBatch):
-		for i in range(len(sentencePairBatch)):
-			# read a sentence
-			sentencePair = sentencePairBatch[i]
-
-			# get the size of target and source
-			targetNum, sourceNum = sentencePair.getSentenceSize()
-
-			# generate lexicon training samples
-			samplesLexicon, labelsLexicon = self.generator.getLSTMLexiconSample( sentencePair )
-
-			# generate alignment samples, sampleInitial is the initial distribution of path (initial state distribution)
-			samplesAlignment = self.generator.getLSTMAlignmentSample( sentencePair )
-			
-			# use IBM to get initial lexicon data
-			outputLexicon = sentencePair.getIBMLexiconInitialData()
-
-			# use baum-welch algorithms to optimize the lexicon probability and alignment probability
-			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackwardInitial( outputLexicon, targetNum, sourceNum )
-			
-			# generate lables from gamma which obtained from baum-welch algorithms
-			lexiconLabel, alignmentLabel, alignmentLabelInitial = self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
-			
-			# use data training lexicon neural network
-			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
-			
-			# use data training alignment neural network
-			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial)
-			
-			# output the result
-			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
-			averageCostAlignment = (averageCostAlignment * i + costAlignment)/(i+1)
-			# averageCostAlignmentInitialState = (averageCostAlignmentInitialState * i + costInitial)/(i+1)
-			self.globalSentenceNum += 1
-
-		self.log.writeSequence('costLexicon:  '+ repr(averageCostLexicon))
-		self.log.writeSequence('costAlignment: '+ repr(averageCostAlignment))
 
 	def processBatch( self,  sentencePairBatch):
 
@@ -159,7 +122,107 @@ class ProcessTraditional:
 		self.log.writeSequence('costLexicon:  '+ repr(averageCostLexicon))
 		self.log.writeSequence('costAlignment: '+ repr(averageCostAlignment))
 		# self.log.writeSequence('costInitial: '+ repr(averageCostAlignmentInitialState))
-	def processLSTMBatch( self,  sentencePairBatch):
+	
+	def processUnitLexiconTest(self, sentencePairBatch):
+		averageCostLexicon = 0;
+
+		sentencePair = sentencePairBatch[0]
+		targetNum, sourceNum = sentencePair.getSentenceSize()
+		samplesLexicon, labelsLexicon = self.generator.getSimpleLexiconSamples( sentencePair )
+		lexiconLabel= self.generator.getUnitTestlabel(sentencePair)
+		for i in range(30):
+			costLexicon = self.lNet.trainingBatch(samplesLexicon, lexiconLabel)
+			print(costLexicon)
+
+	def processPerplexity(self, sentencePairBatch):
+
+		# initialize a perplexity
+		self.perplexity.reInitialize()
+
+		for i in range(len(sentencePairBatch)):
+			sentencePair = sentencePairBatch[i]
+			targetNum, sourceNum = sentencePair.getSentenceSize()
+			samplesLexicon, labelsLexicon = self.generator.getSimpleLexiconSamples( sentencePair )
+			samplesAlignment, sampleInitial = self.generator.getAlignmentSamples( sentencePair )
+			outputLexicon = self.lNet.networkPrognose(samplesLexicon, labelsLexicon)
+			outputAlignment, outputAlignmentInitial = self.aNet.networkPrognose(samplesAlignment, sampleInitial)
+			self.perplexity.addSequence(outputLexicon, outputAlignment, outputAlignmentInitial, targetNum, sourceNum)
+		
+		# get result
+		print('perplexity:  '+ repr(self.perplexity.getPerplexity()))
+		self.log.writeSequence('perplexity:  '+ repr(self.perplexity.getPerplexity()))
+
+class ProcessLSTM:
+	def __init__( self ):
+
+		# configure restart or continue
+		continue_pre = para.Para().ContinueOrRestart()
+		
+		# initialize the networks. lNet for lexicon neural network and 
+		# aNet for alignment network.
+		 
+		self.lNet = lexiconSet.LSTMLexiconNet(continue_pre)
+		self.aNet = alignmentSet.LSTMAlignmentNet(continue_pre)
+		self.generator = samples.GenerateSamples()
+		self.forwardBackward = fb.ForwardBackward()
+		self.perplexity = pp.Perplexity()
+		self.log = printLog.Log()
+
+		self.globalSentenceNum = 0;
+
+		print('...')
+		print("initialize the process finish")
+
+	def recordNetwork(self):
+		self.lNet.saveMatrixToFile()
+		self.aNet.saveMatrixToFile()
+		
+		
+	
+	def processBatchWithBaumWelch(self, sentencePairBatch):
+		averageCostAlignment = 0;
+		averageCostLexicon = 0;
+		averageCostAlignmentInitialState = 0;
+		for i in range(len(sentencePairBatch)):
+			print(i)
+			# read a sentence
+			sentencePair = sentencePairBatch[i]
+
+			# get the size of target and source
+			targetNum, sourceNum = sentencePair.getSentenceSize()
+
+			# generate lexicon training samples
+			samplesLexicon, labelsLexicon = self.generator.getLSTMLexiconSample( sentencePair )
+
+			# generate alignment samples, sampleInitial is the initial distribution of path (initial state distribution)
+			samplesAlignment = self.generator.getLSTMAlignmentSample( sentencePair )
+			
+			# use IBM to get initial lexicon data
+			outputLexicon = sentencePair.getIBMLexiconInitialData()
+
+			# use baum-welch algorithms to optimize the lexicon probability and alignment probability
+			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackwardInitial( outputLexicon, targetNum, sourceNum )
+			
+			# generate lables from gamma which obtained from baum-welch algorithms
+			lexiconLabel, alignmentLabel, alignmentLabelInitial = self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
+			
+			# use data training lexicon neural network
+			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
+			
+			# use data training alignment neural network
+			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
+			
+			# output the result
+			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
+			averageCostAlignment = (averageCostAlignment * i + costAlignment)/(i+1)
+			# averageCostAlignmentInitialState = (averageCostAlignmentInitialState * i + costInitial)/(i+1)
+			self.globalSentenceNum += 1
+
+		self.log.writeSequence('costLexicon:  '+ repr(averageCostLexicon))
+		self.log.writeSequence('costAlignment: '+ repr(averageCostAlignment))
+
+
+	def processBatch( self,  sentencePairBatch):
 
 		averageCostAlignment = 0;
 		averageCostLexicon = 0;
@@ -189,10 +252,10 @@ class ProcessTraditional:
 			
 
 			# train the network
-			costLexicon = self.lNet.trainingBatch(samplesLexicon, lexiconLabel)
-			# costAlignment = self.aNet.trainingBatch(samplesAlignment, alignmentLabel)
-			# costInitial = self.aNet.trainingInitialState(sampleInitial, alignmentLabelInitial)
-			costAlignment = self.aNet.trainingBatchWithInitial(samplesAlignment, alignmentLabel, sampleInitial, alignmentLabelInitial)
+			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
+			
+			# use data training alignment neural network
+			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
 			
 			# output the result
 			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
@@ -208,10 +271,10 @@ class ProcessTraditional:
 
 		sentencePair = sentencePairBatch[0]
 		targetNum, sourceNum = sentencePair.getSentenceSize()
-		samplesLexicon, labelsLexicon = self.generator.getSimpleLexiconSamples( sentencePair )
+		samplesLexicon, labelsLexicon = self.generator.getLSTMLexiconSample( sentencePair )
 		lexiconLabel= self.generator.getUnitTestlabel(sentencePair)
 		for i in range(30):
-			costLexicon = self.lNet.trainingBatch(samplesLexicon, lexiconLabel)
+			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
 			print(costLexicon)
 
 	def processPerplexity(self, sentencePairBatch):
@@ -222,10 +285,11 @@ class ProcessTraditional:
 		for i in range(len(sentencePairBatch)):
 			sentencePair = sentencePairBatch[i]
 			targetNum, sourceNum = sentencePair.getSentenceSize()
-			samplesLexicon, labelsLexicon = self.generator.getSimpleLexiconSamples( sentencePair )
-			samplesAlignment, sampleInitial = self.generator.getAlignmentSamples( sentencePair )
-			outputLexicon = self.lNet.networkPrognose(samplesLexicon, labelsLexicon)
-			outputAlignment, outputAlignmentInitial = self.aNet.networkPrognose(samplesAlignment, sampleInitial)
+			samplesLexicon, labelsLexicon = self.generator.getLSTMLexiconSample( sentencePair )
+			samplesAlignment = self.generator.getLSTMAlignmentSample( sentencePair )
+			outputLexicon = self.lNet.networkPrognose([samplesLexicon], labelsLexicon, sourceNum, targetNum)
+			outputAlignment, outputAlignmentInitial = self.aNet.networkPrognose([samplesAlignment], sourceNum, targetNum)
+
 			self.perplexity.addSequence(outputLexicon, outputAlignment, outputAlignmentInitial, targetNum, sourceNum)
 		
 		# get result

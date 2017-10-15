@@ -24,7 +24,8 @@ _measureData = data.ReadData(parameter.ReadTestFile())
 _log = printLog.Log()
 
 #initialize the process
-_process = process.ProcessTraditional()
+#_process = process.ProcessTraditional()
+_process = process.ProcessLSTM()
 _process.processBatchWithBaumWelch(_data.getCurrentBatch())
 
 if _data.checkStatus() == 0:

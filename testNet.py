@@ -50,27 +50,43 @@ print(test._source)
 print(test._target)
 print(test._targetClass)
 
-samples, labels = p.getLSTMLexiconSample(test)
-samples2 = p.getLSTMAlignmentSample(test)
+samplesLexicon, labelsLexicon = p.getLSTMLexiconSample(test)
+samplesAlignment = p.getLSTMAlignmentSample(test)
 print('----------------lexicon samples and labels-------------')
-print(samples)
-print(labels)
+print(samplesLexicon)
+print(labelsLexicon)
 print('-------------length of labels-------------------')
-print(len(labels))
+print(len(labelsLexicon))
 
 print('----------------alignment samples-------------')
-print(samples2)
+print(samplesAlignment)
 
 print('--------------network print-----------------')
-outLexicon = lexiconNet.networkPrognose([samples], labels, sourceNum, targetNum)
+outputLexicon = lexiconNet.networkPrognose([samplesLexicon], labelsLexicon, sourceNum, targetNum)
 
-print(outLexicon)
-print(len(outLexicon))
+print(outputLexicon)
+print(len(outputLexicon))
 
-outAlignment, outAlignmentInitial = alignmentNet.networkPrognose( [samples2], sourceNum, targetNum )
+outputAlignment, outputAlignmentInitial = alignmentNet.networkPrognose([samplesAlignment], sourceNum, targetNum)
 
-gamma1, gamm2 = FB.calculateForwardBackward(outLexicon,outAlignment, targetNum, sourceNum)
+gamma, alignmentGamma = FB.calculateForwardBackward(outputLexicon,outputAlignment, targetNum, sourceNum)
 
-print(gamma1)
+print(gamma)
 
-print(gamm2)
+print(alignmentGamma)
+
+lexiconLabel, alignmentLabel, alignmentLabelInitial  = p.getLabelFromGamma(alignmentGamma, gamma, test)
+print('--------------lexiconLabel-------------')
+print(lexiconLabel)
+
+print('--------------alignmentLabel-------------')
+print(alignmentLabel)
+
+print('---------------alignment initial-------------------')
+print(alignmentLabelInitial)
+
+# train the network
+costLexicon = lexiconNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
+			
+# use data training alignment neural network
+costAlignment = alignmentNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
