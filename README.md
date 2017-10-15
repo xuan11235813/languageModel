@@ -83,3 +83,5 @@ questions:
 3)how to reuse the tensorflow LSTM network (not anymore)
 
 4) The program will crash when the sentence is too long
+
+5) 17.10 change to BPE and fix the bug
