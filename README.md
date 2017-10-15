@@ -77,7 +77,9 @@ for the following week to 09.07
 
 questions:
 
-1) lexicon model: previously we use null sequence as our target input when facing the first sample. Here add a 'zero' start for target word sequence
+1) lexicon model: previously we use null sequence as our target input when facing the first sample. Here add a 'zero' start for target word sequence (not anymore)
 
-2) alignment model: previously train the initial input distribution as null sequence, now use the 'zero' star
-3)how to reuse the tensorflow LSTM network
+2) alignment model: previously train the initial input distribution as null sequence, now use the 'zero' start (not anymore)
+3)how to reuse the tensorflow LSTM network (not anymore)
+
+4) The program will crash when the sentence is too long

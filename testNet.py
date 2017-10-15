@@ -43,7 +43,7 @@ alignmentNet = al.LSTMAlignmentNet()
 FB = fb.ForwardBackward()
 
 p = samples.GenerateSamples()
-test = _data.trainingSentence[11]
+test = _data.trainingSentence[0]
 targetNum, sourceNum = test. getSentenceSize()
 
 print(test._source)
@@ -86,7 +86,11 @@ print('---------------alignment initial-------------------')
 print(alignmentLabelInitial)
 
 # train the network
+print(len(lexiconLabel))
+print(sourceNum)
+print(targetNum)
 costLexicon = lexiconNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
-			
+print('------------------hahahah-------------------')
+print(len(alignmentLabel))
 # use data training alignment neural network
 costAlignment = alignmentNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
