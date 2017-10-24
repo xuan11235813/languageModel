@@ -16,6 +16,11 @@ machine translation based on tensorflow
  -source ~/tensorflow/bin/activate
 
 
+u/shin/bin/qsubmit -n test_delete_soonnn_1_ -gpu -a cluster-cn-22* -m 20 -t 16:28:00 "sh tensorflow_test_script.sh"
+
+u/shin/bin/qsubmit -n my_cute_crash_code -m 20 -t 12:48:00 "python main.py"
+
+
 for the following week to 09.07
 	1. add the index series function findSample() to Data.py
 	input:  source index
