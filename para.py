@@ -5,15 +5,24 @@ class Para:
 		# general configuration
 		# if read network from files
 		self.continue_pre = 1
-
-
-		#for source data file
+		self.networkStoragePath = 'data/network/'
+		# the following variables are used for previous data
+		# input class and will be deprecated later
+		# for source data file
 		self.sourceVocabFilePath = "data/sourceVocab"
 		self.targetVocabFilePath = "data/engClass"
 		self.trainingDataFilePath = "data/dev.train"
-		self.IBMDataFilePath = 'data/prob'
-		self.networkStoragePath = 'data/network/'
+		self.IBMDataFilePath = 'data/prob'		
 		self.measureDataFilePath = 'data/dev'
+
+
+		# these paths are for bpe
+		self.trainingSourceDataFilePath = "data/train_german.bpe"
+		self.trainingTargetDataFilePath = "data/train_english.bpe"
+		self.IBM1DataFilePath = "data/probIBM1"
+		self.IBM2DataFilePath = "data/probIBM2"
+		self.measureSourceDataFilePath = "data/dev_german.bpe"
+		self.measureTargetDataFilePath = "data/dev_english.bpe"
 
 		#training property
 		self.batchSize = 128
