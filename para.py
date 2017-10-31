@@ -28,7 +28,21 @@ class Para:
 		self.batchSize = 128
 		self.testBatchSize = 40
 
-	
+	# path for dataInput.py
+	def GetSourceTrainingFilePath(self):
+		return self.trainingSourceDataFilePath
+	def GetTargetTrainingFilePath(self):
+		return self.trainingTargetDataFilePath
+	def GetIBMDataFile1(self):
+		return self.IBM1DataFilePath
+	def GetIBMDataFile2(self):
+		return self.IBM2DataFilePath
+	def GetSourceMeasureFilePath(self):
+		return self.measureSourceDataFilePath
+	def GetTargetMeasureFilePath(self):
+		return self.measureTargetDataFilePath
+
+	# path for data.py, will be deprecated later
 	def GetSourceVocabFilePath(self):
 		return self.sourceVocabFilePath
 	def GetTargetVocabFilePath(self):
@@ -37,12 +51,14 @@ class Para:
 		return self.trainingDataFilePath
 	def GetIBMFilePath(self):
 		return self.IBMDataFilePath
+	def GetMeasureDataFilePath(self):
+		return self.measureDataFilePath
+
+	# global variables and path
 	def ContinueOrRestart(self):
 		return self.continue_pre
 	def GetNetworkStoragePath(self):
-		return self.networkStoragePath
-	def GetMeasureDataFilePath(self):
-		return self.measureDataFilePath
+		return self.networkStoragePath	
 	def GetTestBatchSize(self):
 		return self.testBatchSize
 	def ReadTrainingFile(self):
