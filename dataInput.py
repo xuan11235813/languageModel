@@ -155,6 +155,7 @@ class ReadIBM:
 			for sourceWord in source:
 				probItem = self.findProb(sourceWord, targetWord)
 				prob.append(probItem)
+		return prob
 	def isNormal(self):
 		return self.alert
 

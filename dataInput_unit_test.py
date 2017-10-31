@@ -7,7 +7,7 @@ data.refreshNewBatch()
 data.refreshNewBatch()
 batch = data.getCurrentBatch()
 sentence = batch[0]
-
+print(sentence.getIBMLexiconInitialDatax`())
 print(sentence._source)
 
 for i  in sentence._source:
@@ -19,7 +19,7 @@ for i in sentence._target:
 data.recordCurrentTrainPosition()
 
 data_ = dataInput.ReadData()
-batch = data_.getCurrentBatch()
+batch = data_.getCurrentBatch()x`
 sentence = batch[0]
 
 print(sentence._source)

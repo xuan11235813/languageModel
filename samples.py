@@ -32,8 +32,8 @@ class GenerateSamples:
 
 		for i in range( self.targetNum ):
 			for j in range( self.sourceNum ):
-				#labels.append(sentencePair._target[i])
-				labels.append(sentencePair._targetClass[i])
+				labels.append(sentencePair._target[i])
+				#labels.append(sentencePair._targetClass[i])
 		return samples, labels
 
 	def getLSTMAlignmentSample(self, sentencePair):
@@ -62,8 +62,8 @@ class GenerateSamples:
 		# create lexicon label
 		for i in range(self.targetNum):
 			for j in range(self.sourceNum):
-				lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = lexiconGamma[i][j]
-
+				#lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = lexiconGamma[i][j]
+				lexiconLabel[i * self.sourceNum + j][sentencePair._target[i]] = lexiconGamma[i][j]
 		# create alignment label
 		jumpLimited = self.alignmentNetPara.GetJumpLimited()
 		for i in range(self.targetNum  - 1):
@@ -84,7 +84,8 @@ class GenerateSamples:
 		center = int(self.alignmentNetPara.GetJumpLabelSize()/2)
 		for i in range(self.targetNum):
 			for j in range(self.sourceNum):
-				lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = 1
+				#lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = 1
+				lexiconLabel[i * self.sourceNum + j][sentencePair._target[i]] = 1
 		return lexiconLabel
 
 	# ------------------------------These functions will be deprecated later ---------------------------------------
@@ -114,7 +115,8 @@ class GenerateSamples:
 						itemSample.append(0)
 					else:
 						itemSample.append(sentencePair._target[t] + self.bias)
-				itemLabel.append(sentencePair._targetClass[i])
+				#itemLabel.append(sentencePair._targetClass[i])
+				itemLabel.append(sentencePair._target[i])
 				itemLabel.append(sentencePair._innerClassIndex[i])
 				samples.append(itemSample)
 				labels.append(itemLabel)
@@ -146,7 +148,8 @@ class GenerateSamples:
 					else:
 						itemSample.append(sentencePair._target[t] + self.bias)
 				samples.append(itemSample)
-				labels.append(sentencePair._targetClass[i])
+				#labels.append(sentencePair._targetClass[i])
+				labels.append(sentencePair._target[i])
 		return samples, labels
 
 	def getAlignmentSamples(self, sentencePair):
