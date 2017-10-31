@@ -294,9 +294,9 @@ class ReadData:
 
 
 			while True:
-				sourceLine = self.sourceTrainingFile.readline()
-				targetLine = self.targetTrainingFile.readline()
-				if sourceLine =='' or targetLine == '' or len(self.trainingSentence) == self.parameters.GetTestBatchSize():
+				sourceLine = self.sourceMeasureFile.readline()
+				targetLine = self.targetMeasureFile.readline()
+				if sourceLine =='' or targetLine == '' or len(self.trainingSentence) == self.parameter.GetTestBatchSize():
 					break
 				sourceWordList = []
 				targetWordList = []
@@ -313,11 +313,11 @@ class ReadData:
 						targetWordList.append(targetWord)
 				if sentencePair.checkSentence() == 0:
 					self.trainingSentence.append(sentencePair)
-			self.sourceTrainFileCurrentPosition = self.sourceTrainingFile.tell()
-			self.targetTrainFileCurrentPosition = self.targetTrainingFile.tell()
+			self.sourceTrainFileCurrentPosition = self.sourceMeasureFile.tell()
+			self.targetTrainFileCurrentPosition = self.targetMeasureFile.tell()
 
-			self.sourceTrainingFile.close()
-			self.targetTrainingFile.close()
+			self.sourceMeasureFile.close()
+			self.targetMeasureFile.close()
 
 		except IOError as err:
 			print('training files do not exist')

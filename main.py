@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import data
+import dataInput as data
 import process
 import printLog
 import para
