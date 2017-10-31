@@ -32,7 +32,7 @@ class Log:
 					item.append(word)
 				itemDic[item[0].rstrip()] = item[1].rstrip()
 			f.close()
-			return itemDic['oldTrainingFilePosition']
+			return int(itemDic['oldTrainingFilePosition'])
 		except:
 			return 0
 

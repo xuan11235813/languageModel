@@ -179,7 +179,7 @@ class ReadData:
 		if measure == 0:
 			self.IBMWordDic = ReadIBM()
 			self.alert += self.IBMWordDic.isNormal()
-			self.readTrainDataBatch(self.parameters.ContinueOrRestart())
+			self.readTrainDataBatch(self.parameter.ContinueOrRestart())
 		else:
 			self.readMeasureDataBatch()
 
@@ -202,8 +202,8 @@ class ReadData:
 		if continue_pre != 0:
 			posSource = self.log.readParameter('sourcePosition')
 			posTarget = self.log.readParameter('targetPosition')
-			self.sourceTrainFileCurrentPosition = posSource
-			self.targetTrainFileCurrentPosition = posTarget
+			self.sourceTrainFileCurrentPosition = int(posSource)
+			self.targetTrainFileCurrentPosition = int(posTarget)
 
 		try:
 			self.sourceTrainingFile = open(self.sourceTrainingFilePath, 'r')
@@ -228,7 +228,7 @@ class ReadData:
 						sentencePair._target.append(targetIndex)
 						targetWordList.append(targetWord)
 				prob = self.IBMWordDic.findIBMProb(sourceWordList, targetWordList)
-				sentencePair._IBM1Data = probItem
+				sentencePair._IBM1Data = prob
 				if sentencePair.checkSentence() == 0:
 					self.trainingSentence.append(sentencePair)
 			self.sourceTrainFileCurrentPosition = self.sourceTrainingFile.tell()
@@ -271,7 +271,7 @@ class ReadData:
 						sentencePair._target.append(targetIndex)
 						targetWordList.append(targetWord)
 				prob = self.IBMWordDic.findIBMProb(sourceWordList, targetWordList)
-				sentencePair._IBM1Data = probItem
+				sentencePair._IBM1Data = prob
 				if sentencePair.checkSentence() == 0:
 					self.trainingSentence.append(sentencePair)
 			self.sourceTrainFileCurrentPosition = self.sourceTrainingFile.tell()
