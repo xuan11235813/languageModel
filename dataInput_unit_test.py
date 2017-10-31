@@ -19,7 +19,7 @@ for i in sentence._target:
 data.recordCurrentTrainPosition()
 
 data_ = dataInput.ReadData()
-batch = data_.getCurrentBatch()x`
+batch = data_.getCurrentBatch()
 sentence = batch[0]
 
 print(sentence._source)
