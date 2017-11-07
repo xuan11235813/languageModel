@@ -195,7 +195,7 @@ print(sess.run(tfFinal))
 print(sess.run(tfFinalSelect))
 print(sess.run(tf.add(tfSelect[0], tfSelect[1])))
 
-'''
+
 #-------------------------condition test-------------------------------------
 sess = tf.Session()
 
@@ -216,7 +216,7 @@ print(sess.run(a))
 p = sess.run([result], feed_dict={x:3, y:4} )
 print(p)
 
-'''
+
 #-----------------------basic-while-loop-test-----------------------------------
 
 sess = tf.Session()
@@ -308,3 +308,17 @@ targetLoop = tf.while_loop(
 
 print(sess.run(targetLoop)[3])
 '''
+
+y1 = tf.Variable([[2,2,2],[3,3,3],[4,4,4],[5,5,5]])
+
+n1 = tf.Variable(2)
+n2 = tf.Variable(2)
+
+y2, y3 = tf.split(y1, [n1,n2], 0)
+
+sess = tf.Session()
+
+init = tf.global_variables_initializer();
+sess.run(init)
+print(sess.run(y2))
+print(sess.run(y3))

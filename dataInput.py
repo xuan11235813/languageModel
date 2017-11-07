@@ -35,6 +35,10 @@ class SentencePair:
 			flag = 1
 		if len(self._target) < 2:
 			flag = 1
+		if len(self._source) >= 50:
+			flag = 1
+		if len(self._target) >= 50:
+			flag = 1
 		return flag
 
 '''

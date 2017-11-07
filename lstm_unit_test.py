@@ -151,6 +151,75 @@ def multilayerLSTMNetForOneSentence(sequence, sourceNum, targetNum):
     out = tf.add(tf.matmul(readyToProcess, weights['hiddenSequence']),bias['hidden'])
     print('------------------end process--------------------')
     return out
+def multilayerLSTMNetModern(sequence, _sourceNum, _targetNum):
+    
+    _concatOutput = tf.zeros([0,400])
+    i0 = tf.constant(0)
+    j0 = tf.constant(0)
+    _output = tf.zeros([0,200])
+    concatVector = tf.nn.embedding_lookup(weights['projection'], [sequence])
+
+    cell_fw = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
+    cell_bw = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
+    cell_target = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
+    
+
+    initial_state_fw  = cell_fw.zero_state(1, tf.float32)
+    initial_state_bw  = cell_bw.zero_state(1, tf.float32)
+    initial_state_target = cell_target.zero_state(1, tf.float32)
+
+    seqSource, seqTarget = tf.split(concatVector, [3, 3], 1)
+
+    (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, seqSource,
+                 _sourceNum, initial_state_fw, initial_state_bw)
+    (outputTargetForward, _) = tf.nn.dynamic_rnn( cell_target, seqTarget, 
+                _targetNum, initial_state_target )
+
+    outputSourceForward = outputSource[0]
+    outputSourceBackward = outputSource[1]
+
+    def genSourceBody(i, j, sourceNum, output):
+        
+        item = tf.concat([tf.add(outputSourceForward[j, :], outputSourceBackward[j, :]), outputTargetForward[i,:]], 0)
+        item = tf.reshape(item, [-1]);
+        output = tf.concat([output, [item]], 0)
+        j = tf.add(j, 1)
+        return i, j, sourceNum, output
+    def genSourceCond(i, j, sourceNum, output):
+        return tf.less(j, sourceNum)
+
+    def genTargetBody(i, targetNum, sourceNum, output):
+        sourceLoop = tf.while_loop(
+            genSourceCond,
+            genSourceBody,
+            loop_vars = [i, j0, sourceNum, output],
+            shape_invariants = [
+            i.get_shape(),
+            j0.get_shape(),
+            sourceNum.get_shape(),
+            tf.TensorShape([None, 400])])
+        output = sourceLoop[3]
+        i = tf.add(i,1)
+        return i, targetNum, sourceNum, output
+
+    def genTargetCond(i, targetNum, sourceNum, output):
+        return tf.less(i,targetNum)
+    targetLoop = tf.while_loop(
+        genTargetCond,
+        genTargetBody,
+        loop_vars = [i0, _targetNum, _sourceNum, _concatOutput],
+        shape_invariants = [
+        i0.get_shape(),
+        _targetNum.get_shape(),
+        _sourceNum.get_shape(),
+        tf.TensorShape([None, 400])])
+
+    readyToProcess = targetLoop[3]
+    out = tf.add(tf.matmul(readyToProcess, weights['hiddenSequence']),bias['hidden'])
+    print('------------------end process--------------------')
+    return out
+
+
 
 
 
@@ -322,7 +391,7 @@ def trainingSentence(sequence, batch_probabilityClass):
      sourceNumPlace: _sourceNum_, targetNumPlace: _targetNum_})
     return c
 '''
-predP = multilayerLSTMNetForOneSentencePlaceholder( sentence, sourceNumPlace,targetNumPlace )
+predP = multilayerLSTMNetModern( sentence, sourceNumPlace,targetNumPlace )
 costP = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=predP))
 optimizerP = tf.train.AdamOptimizer(learning_rate= 0.02).minimize(costP)
 def trainingSentencePlaceholder(sequence, batch_probabilityClass):
