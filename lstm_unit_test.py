@@ -151,8 +151,10 @@ def multilayerLSTMNetForOneSentence(sequence, sourceNum, targetNum):
     out = tf.add(tf.matmul(readyToProcess, weights['hiddenSequence']),bias['hidden'])
     print('------------------end process--------------------')
     return out
-def multilayerLSTMNetModern(sequence, _sourceNum, _targetNum):
-    
+
+def multilayerLSTMNetModern(sequence, _sourcetargetNum):
+    print('hhhhhhhhhhhhhhhhhhh')
+    print(_sourcetargetNum)
     _concatOutput = tf.zeros([0,400])
     i0 = tf.constant(0)
     j0 = tf.constant(0)
@@ -168,19 +170,22 @@ def multilayerLSTMNetModern(sequence, _sourceNum, _targetNum):
     initial_state_bw  = cell_bw.zero_state(1, tf.float32)
     initial_state_target = cell_target.zero_state(1, tf.float32)
 
-    seqSource, seqTarget = tf.split(concatVector, [3, 3], 1)
+
+    seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
 
     (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, seqSource,
-                 _sourceNum, initial_state_fw, initial_state_bw)
+                 tf.stack([_sourcetargetNum[0]]), initial_state_fw, initial_state_bw)
     (outputTargetForward, _) = tf.nn.dynamic_rnn( cell_target, seqTarget, 
-                _targetNum, initial_state_target )
+                tf.stack([_sourcetargetNum[1]]), initial_state_target )
 
     outputSourceForward = outputSource[0]
     outputSourceBackward = outputSource[1]
 
+    print(outputSourceForward.get_shape())
+    print(outputSourceBackward.get_shape())
     def genSourceBody(i, j, sourceNum, output):
         
-        item = tf.concat([tf.add(outputSourceForward[j, :], outputSourceBackward[j, :]), outputTargetForward[i,:]], 0)
+        item = tf.concat([tf.add(outputSourceForward[:,j, :], outputSourceBackward[:,j, :]), outputTargetForward[:,i,:]], 1)
         item = tf.reshape(item, [-1]);
         output = tf.concat([output, [item]], 0)
         j = tf.add(j, 1)
@@ -207,14 +212,15 @@ def multilayerLSTMNetModern(sequence, _sourceNum, _targetNum):
     targetLoop = tf.while_loop(
         genTargetCond,
         genTargetBody,
-        loop_vars = [i0, _targetNum, _sourceNum, _concatOutput],
+        loop_vars = [i0, _sourcetargetNum[0], _sourcetargetNum[1], _concatOutput],
         shape_invariants = [
         i0.get_shape(),
-        _targetNum.get_shape(),
-        _sourceNum.get_shape(),
+        _sourcetargetNum[0].get_shape(),
+        _sourcetargetNum[0].get_shape(),
         tf.TensorShape([None, 400])])
 
     readyToProcess = targetLoop[3]
+    print(readyToProcess.get_shape())
     out = tf.add(tf.matmul(readyToProcess, weights['hiddenSequence']),bias['hidden'])
     print('------------------end process--------------------')
     return out
@@ -224,8 +230,11 @@ def multilayerLSTMNetModern(sequence, _sourceNum, _targetNum):
 
 
 # input only one sentence with uncertain length( placeholder )
-def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum):
+def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceTargetNum):
 
+
+    _sourceNum = _sourceTargetNum[0]
+    _targetNum = _sourceTargetNum[1]
     _concatOutput = tf.zeros([0,400])
 
     cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
@@ -355,8 +364,10 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
         _targetNum.get_shape(),
         _sourceNum.get_shape(),
         tf.TensorShape([None, 400])])
-
+    
     readyToProcess = targetLoop[3]
+    
+    
     out = tf.add(tf.matmul(readyToProcess, weights['hiddenSequence']),bias['hidden'])
     print('------------------end process--------------------')
     return out
@@ -365,11 +376,13 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceNum, _targetNum)
 sess = tf.Session()
 sequence = tf.placeholder(tf.int32, [None, None])
 sentence = tf.placeholder(tf.int32, [None])
-sourceNumPlace = tf.placeholder(tf.int32)
 targetNumPlace = tf.placeholder(tf.int32)
+sourceNumPlace = tf.placeholder(tf.int32)
+sourceTargetPlace = tf.placeholder(tf.int32, [2])
+
 _sourceNum_ = 3
 _targetNum_ = 3
-
+_sourceTarget_ = [3,3]
 probability = tf.placeholder("float", [None, 20])
 print(probability.get_shape())
 '''
@@ -391,12 +404,19 @@ def trainingSentence(sequence, batch_probabilityClass):
      sourceNumPlace: _sourceNum_, targetNumPlace: _targetNum_})
     return c
 '''
-predP = multilayerLSTMNetModern( sentence, sourceNumPlace,targetNumPlace )
+#predP = multilayerLSTMNetModern( sentence, sourceNumPlace, targetNumPlace )
+predP = multilayerLSTMNetModern( sentence, sourceTargetPlace)
+
 costP = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=probability,logits=predP))
 optimizerP = tf.train.AdamOptimizer(learning_rate= 0.02).minimize(costP)
+'''
 def trainingSentencePlaceholder(sequence, batch_probabilityClass):
     _, c = sess.run([optimizerP, costP], feed_dict={sentence: sequence, probability: batch_probabilityClass,\
      sourceNumPlace: _sourceNum_, targetNumPlace: _targetNum_})
+'''
+def trainingSentencePlaceholder(sequence, batch_probabilityClass):
+    _, c = sess.run([optimizerP, costP], feed_dict={sentence: sequence, probability: batch_probabilityClass,\
+     sourceTargetPlace: _sourceTarget_})
     return c
 
 

@@ -177,8 +177,10 @@ class LSTMAlignmentNet:
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
+        self.sourceTargetPlace = tf.placeholder(tf.int32, [2])
         self.probability = tf.placeholder("float", [None, self.netPara.GetJumpLabelSize()])
-        self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sequenceBatch, self.sourceNumPlace, self.targetNumPlace)
+        #self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sequenceBatch, self.sourceTargetPlace)
+        self.pred = self.multilayerLSTMNetModern(self.sequenceBatch, self.sourceTargetPlace)
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
@@ -213,7 +215,90 @@ class LSTMAlignmentNet:
         np.save(self.networkPathPrefix + 'alignment_bias_out', saveMatrix)
 
 
-    def multilayerLSTMNetForOneSentencePlaceholder(self, sequence_batch, _sourceNum, _targetNum):
+    def multilayerLSTMNetModern(self, sequence_batch, _sourcetargetNum):
+
+        _concatOutput = tf.zeros([0,self.readyToProcessDim])
+        i0 = tf.constant(0)
+        j0 = tf.constant(0)
+        _output = tf.zeros([0,self.projOutDim])
+        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+
+        cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+        cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+        cell_target = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+    
+
+        initial_state_fw  = cell_fw.zero_state(1, tf.float32)
+        initial_state_bw  = cell_bw.zero_state(1, tf.float32)
+        initial_state_target = cell_target.zero_state(1, tf.float32)
+
+
+        seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
+
+
+        (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, seqSource,
+                    tf.stack([_sourcetargetNum[0]]), initial_state_fw, initial_state_bw)
+        (outputTargetForward, _) = tf.nn.dynamic_rnn( cell_target, seqTarget, 
+                    tf.stack([_sourcetargetNum[1]]), initial_state_target )
+
+        outputSourceForward = outputSource[0]
+        outputSourceBackward = outputSource[1]
+
+
+        def genSourceBody(i, j, sourceNum, output):
+        
+            item = tf.concat([tf.add(outputSourceForward[:,j, :], outputSourceBackward[:,j, :]), outputTargetForward[:,i,:]], 1)
+            item = tf.reshape(item, [-1]);
+            output = tf.concat([output, [item]], 0)
+            j = tf.add(j, 1)
+            return i, j, sourceNum, output
+        def genSourceCond(i, j, sourceNum, output):
+            return tf.less(j, sourceNum)
+
+        def genTargetBody(i, targetNum, sourceNum, output):
+            sourceLoop = tf.while_loop(
+                genSourceCond,
+                genSourceBody,
+                loop_vars = [i, j0, sourceNum, output],
+                shape_invariants = [
+                i.get_shape(),
+                j0.get_shape(),
+                sourceNum.get_shape(),
+                tf.TensorShape([None, self.readyToProcessDim])])
+            output = sourceLoop[3]
+            i = tf.add(i,1)
+            return i, targetNum, sourceNum, output
+
+        def genTargetCond(i, targetNum, sourceNum, output):
+            return tf.less(i,targetNum)
+
+        targetLoop = tf.while_loop(
+            genTargetCond,
+            genTargetBody,
+            loop_vars = [i0, _sourcetargetNum[0], _sourcetargetNum[1], _concatOutput],
+            shape_invariants = [
+            i0.get_shape(),
+            _sourcetargetNum[0].get_shape(),
+            _sourcetargetNum[0].get_shape(),
+            tf.TensorShape([None, self.readyToProcessDim])])
+
+        readyToProcess = targetLoop[3]
+
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
+
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])        
+        hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
+
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+
+        return out
+
+
+    def multilayerLSTMNetForOneSentencePlaceholder(self, sequence_batch, _sourceTargetNum):
+
+        _sourceNum = _sourceTargetNum[0]
+        _targetNum = _sourceTargetNum[1]
 
         # loops only equals targetNum - 1
         _targetNum = tf.subtract(_targetNum, 1)
@@ -382,8 +467,7 @@ class LSTMAlignmentNet:
         outInitial = self.sess.run(self.calculatedProbInit, feed_dict = {})
 
         out = self.sess.run([self.calculatedProb],feed_dict={self.sequenceBatch : _sequenceBatch,
-            self.sourceNumPlace : _sourceNum,
-            self.targetNumPlace : _targetNum})
+            self.sourceTargetPlace : [_sourceNum, _targetNum - 1]})
 
 
         return out[0], outInitial
@@ -394,8 +478,7 @@ class LSTMAlignmentNet:
         _, c = self.sess.run([self.optimizerInit, self.costInit], feed_dict = {self.probability :[probability_initial]})
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequenceBatch: _sequenceBatch,
                                 self.probability: probability,
-                                self.sourceNumPlace : _sourceNum,
-                                self.targetNumPlace : _targetNum})
+                                self.sourceTargetPlace : [_sourceNum, _targetNum]})
         return c
     
 
