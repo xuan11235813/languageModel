@@ -35,10 +35,12 @@ class SentencePair:
 			flag = 1
 		if len(self._target) < 2:
 			flag = 1
+		
 		if len(self._source) >= 50:
 			flag = 1
 		if len(self._target) >= 50:
 			flag = 1
+			
 		return flag
 
 '''
@@ -77,8 +79,8 @@ class ReadDic:
 					if item not in self.targetDic:
 						self.targetDic[item] = targetIndex
 						self.targetIndexDic[targetIndex] = item
-						targetIndex += 1		
-
+						targetIndex += 1
+						
 			self.targetTrainingFile.close()
 			self.sourceTrainingFile.close()
 

@@ -212,7 +212,7 @@ def multilayerLSTMNetModern(sequence, _sourcetargetNum):
     targetLoop = tf.while_loop(
         genTargetCond,
         genTargetBody,
-        loop_vars = [i0, _sourcetargetNum[0], _sourcetargetNum[1], _concatOutput],
+        loop_vars = [i0, _sourcetargetNum[1], _sourcetargetNum[0], _concatOutput],
         shape_invariants = [
         i0.get_shape(),
         _sourcetargetNum[0].get_shape(),
@@ -382,7 +382,7 @@ sourceTargetPlace = tf.placeholder(tf.int32, [2])
 
 _sourceNum_ = 3
 _targetNum_ = 3
-_sourceTarget_ = [3,3]
+_sourceTarget_ = [2,4]
 probability = tf.placeholder("float", [None, 20])
 print(probability.get_shape())
 '''
@@ -434,7 +434,7 @@ for i in range(20):
 
 '''
 for i in range(20): 
-    costValue = trainingSentencePlaceholder(_trainingSentence, trainingLabel)
+    costValue = trainingSentencePlaceholder(_trainingSentence, trainingLabel8)
     print(costValue)
 '''
 

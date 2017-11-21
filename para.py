@@ -89,7 +89,7 @@ class Para:
 				self.hiddenLayer1stInput = 400
 				self.hiddenLayer1stOutput = 1000
 				self.hiddenLayer2ndOutput = 500
-				self.outputLayerOutput = 2000
+				self.outputLayerOutput = 12000
 
 
 			else:

@@ -61,11 +61,13 @@ print(len(labelsLexicon))
 print('----------------alignment samples-------------')
 print(samplesAlignment)
 
+
 print('--------------network print-----------------')
 outputLexicon = lexiconNet.networkPrognose([samplesLexicon], labelsLexicon, sourceNum, targetNum)
 
 print(outputLexicon)
 print(len(outputLexicon))
+
 
 outputAlignment, outputAlignmentInitial = alignmentNet.networkPrognose([samplesAlignment], sourceNum, targetNum)
 

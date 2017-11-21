@@ -3,12 +3,12 @@ import para
 import numpy as np
 
 class GenerateSamples:
-	def __init__(self):
+	def __init__(self, mode  = ''):
 		print('ready to generate samples')
 		self.targetNum = 0
 		self.sourceNum = 0
 		parameters = para.Para()
-		self.lexiconNetPara = parameters.LexiconNeuralNetwork()
+		self.lexiconNetPara = parameters.LexiconNeuralNetwork(mode)
 		self.alignmentNetPara = parameters.AlignmentNeuralNetwork()
 		self.bias = parameters.GetTargetSourceBias()
 

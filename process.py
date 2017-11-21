@@ -163,7 +163,7 @@ class ProcessLSTM:
 		 
 		self.lNet = lexiconSet.LSTMLexiconNet(continue_pre)
 		self.aNet = alignmentSet.LSTMAlignmentNet(continue_pre)
-		self.generator = samples.GenerateSamples()
+		self.generator = samples.GenerateSamples('lstm')
 		self.forwardBackward = fb.ForwardBackward()
 		self.perplexity = pp.Perplexity()
 		self.log = printLog.Log()
@@ -184,6 +184,7 @@ class ProcessLSTM:
 		averageCostLexicon = 0;
 		averageCostAlignmentInitialState = 0;
 		for i in range(len(sentencePairBatch)):
+
 			# read a sentence
 			sentencePair = sentencePairBatch[i]
 
