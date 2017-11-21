@@ -3,7 +3,7 @@ from time import gmtime, strftime, localtime
 class Log:
 	def __init__(self):
 		self.fileName = 'log.log'
-		self.lastRecordFileName = 'record.config.log'
+		self.lastRecordFileName = 'record.configuration.log'
 
 	def writeSequence(self, str):
 		try:
