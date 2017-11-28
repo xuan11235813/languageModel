@@ -9,7 +9,6 @@ import printLog
 '''
 This class stores the target sentence index and souce sentence
 index.
-Besides the IBM data will be stored here.
 
 '''
 
@@ -107,7 +106,10 @@ class ReadDic:
 		return self.targetIndexDic[index]
 	def isNormal(self):
 		return self.alert
-
+		
+'''
+The IBM data will be stored here.
+'''
 
 
 class ReadIBM:

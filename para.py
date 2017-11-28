@@ -5,24 +5,24 @@ class Para:
 		# general configuration
 		# if read network from files
 		self.continue_pre = 1
-		self.networkStoragePath = 'data/network/'
+		self.networkStoragePath = '/u/zgan/Desktop/HMMLM/languageModel/data/network/'
 		# the following variables are used for previous data
 		# input class and will be deprecated later
 		# for source data file
-		self.sourceVocabFilePath = "data/sourceVocab"
-		self.targetVocabFilePath = "data/engClass"
-		self.trainingDataFilePath = "data/dev.train"
-		self.IBMDataFilePath = 'data/prob'		
-		self.measureDataFilePath = 'data/dev'
+		self.sourceVocabFilePath = "/u/zgan/Desktop/HMMLM/languageModel/data/sourceVocab"
+		self.targetVocabFilePath = "/u/zgan/Desktop/HMMLM/languageModel/data/engClass"
+		self.trainingDataFilePath = "/u/zgan/Desktop/HMMLM/languageModel/data/dev.train"
+		self.IBMDataFilePath = '/u/zgan/Desktop/HMMLM/languageModel/data/prob'		
+		self.measureDataFilePath = '/u/zgan/Desktop/HMMLM/languageModel/data/dev'
 
 
 		# these paths are for bpe
-		self.trainingSourceDataFilePath = "data/train_german.bpe"
-		self.trainingTargetDataFilePath = "data/train_english.bpe"
-		self.IBM1DataFilePath = "data/probIBM1"
-		self.IBM2DataFilePath = "data/probIBM2"
-		self.measureSourceDataFilePath = "data/dev_german.bpe"
-		self.measureTargetDataFilePath = "data/dev_english.bpe"
+		self.trainingSourceDataFilePath = "/u/zgan/Desktop/HMMLM/languageModel/data/train_german.bpe"
+		self.trainingTargetDataFilePath = "/u/zgan/Desktop/HMMLM/languageModel/data/train_english.bpe"
+		self.IBM1DataFilePath = "/u/zgan/Desktop/HMMLM/languageModel/data/probIBM1"
+		self.IBM2DataFilePath = "/u/zgan/Desktop/HMMLM/languageModel/data/probIBM2"
+		self.measureSourceDataFilePath = "/u/zgan/Desktop/HMMLM/languageModel/data/dev_german.bpe"
+		self.measureTargetDataFilePath = "/u/zgan/Desktop/HMMLM/languageModel/data/dev_english.bpe"
 
 		#training property
 		self.batchSize = 128

@@ -184,7 +184,7 @@ class ProcessLSTM:
 		averageCostLexicon = 0;
 		averageCostAlignmentInitialState = 0;
 		for i in range(len(sentencePairBatch)):
-
+			
 			# read a sentence
 			sentencePair = sentencePairBatch[i]
 

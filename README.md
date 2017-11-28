@@ -10,7 +10,7 @@ machine translation based on tensorflow
 
 * runtime environment in RWTH
  -source /work/smt2/dzhu/tensorflow/tensorflow_env/bin/activate 
-
+qsubmit -n zgan_hmm -m 13G -t 160:00:00 -gpu -a cluster-cn-2[26-60] "bash lm_cpu.sh"
 
 * runtime environment at home
  -source ~/tensorflow/bin/activate
