@@ -4,6 +4,7 @@ import math as mt
 import numpy as np
 import os.path
 
+
 class TraditionalAlignmentNet:
     def __init__(self, continue_pre = 0):
         #parameter

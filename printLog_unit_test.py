@@ -1,4 +1,5 @@
 import printLog
+import tensorflow as tf
 
 ll = printLog.Log()
 

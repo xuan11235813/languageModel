@@ -21,13 +21,15 @@ measturePerplexity = 0
 # and 1 for reading from test file(measure data file)
 _data = data.ReadData(parameter.ReadTrainingFile())
 _measureData = data.ReadData(parameter.ReadTestFile())
+
 _log = printLog.Log()
 
 #initialize the process
 #_process = process.ProcessTraditional()
+
 _process = process.ProcessLSTM()
 _process.processBatchWithBaumWelch(_data.getCurrentBatch())
-
+'''
 if _data.checkStatus() == 0:
 	batchStatus = 0
 	while True:
@@ -63,3 +65,4 @@ if _data.checkStatus() == 0:
 else:
 	_log.writeSequence('stop the program')
 	
+'''

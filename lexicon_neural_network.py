@@ -4,6 +4,7 @@ import math as mt
 import numpy as np
 import os.path
 
+
 class TraditionalLexiconNet:
     def __init__(self, continue_pre = 0):
         #parameter
@@ -136,35 +137,37 @@ class LSTMLexiconNet:
         self.sourceNum = 0
         self.targetNum = 0
 
+        with tf.device('/device:GPU:0'):
 
-        if (continue_pre == 0):
-            self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
-            self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
-            self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
-            self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetOutputLayer()))
-            self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
-            self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
-            self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetOutputLayer()[1]]))
-        else:
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_projection.npy')
-            self.weights['projection'] = tf.Variable(savedMatrix)           
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden1.npy')
-            self.weights['hidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden2.npy')
-            self.weights['hidden2'] = tf.Variable(savedMatrix)
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_out.npy')
-            self.weights['out'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden1.npy')
-            self.biases['bHidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden2.npy')
-            self.biases['bHidden2'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_out.npy')
-            self.biases['out'] = tf.Variable(savedMatrix)
+            if (continue_pre == 0):
+                self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
+                self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
+                self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
+                self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetOutputLayer()))
+                self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
+                self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
+                self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetOutputLayer()[1]]))
+            else:
+                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_projection.npy')
+                self.weights['projection'] = tf.Variable(savedMatrix)           
+                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden1.npy')
+                self.weights['hidden1'] = tf.Variable(savedMatrix)            
+                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden2.npy')
+                self.weights['hidden2'] = tf.Variable(savedMatrix)
+                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_out.npy')
+                self.weights['out'] = tf.Variable(savedMatrix)            
+                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden1.npy')
+                self.biases['bHidden1'] = tf.Variable(savedMatrix)            
+                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden2.npy')
+                self.biases['bHidden2'] = tf.Variable(savedMatrix)            
+                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_out.npy')
+                self.biases['out'] = tf.Variable(savedMatrix)
+        
 
         
         # placeholder
         # for common words
-        self.sess = tf.Session()
+        self.sess = sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)

@@ -10,13 +10,13 @@ machine translation based on tensorflow
 
 * runtime environment in RWTH
  -source /work/smt2/dzhu/tensorflow/tensorflow_env/bin/activate 
-qsubmit -n zgan_hmm -m 13G -t 160:00:00 -gpu -a cluster-cn-2[26-60] "bash lm_cpu.sh"
+qsubmit -n zgan_hmm -m 13G -t 160:00:00 -gpu -a cluster-cn-23[1-9] "bash /u/zgan/Desktop/HMMLM/languageModel/lm_cpu.sh"
 
 * runtime environment at home
  -source ~/tensorflow/bin/activate
 
 
-u/shin/bin/qsubmit -n test_delete_soonnn_1_ -gpu -a cluster-cn-22* -m 20 -t 16:28:00 "sh tensorflow_test_script.sh"
+u/shin/bin/qsubmit -n test_delete_soonnn_1_ -a cluster-cn-22* -m 20 -t 16:00:00 -gpu"sh tensorflow_test_script.sh"
 
 u/shin/bin/qsubmit -n my_cute_crash_code -m 20 -t 12:48:00 "python main.py"
 

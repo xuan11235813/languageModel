@@ -373,7 +373,7 @@ def multilayerLSTMNetForOneSentencePlaceholder(sequence, _sourceTargetNum):
     return out
 
 
-sess = tf.Session()
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 sequence = tf.placeholder(tf.int32, [None, None])
 sentence = tf.placeholder(tf.int32, [None])
 targetNumPlace = tf.placeholder(tf.int32)

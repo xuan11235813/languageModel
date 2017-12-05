@@ -3,17 +3,17 @@ import numpy as np
 import math as mt
 import para
 
-'''
-x = [1,3,1]
 
-a1 = tf.Variable(tf.random_normal([5, 4]))
-a2 = tf.Variable(tf.random_normal([4, 3]))
-b = tf.Variable([], dtype = tf.float32)
-h = tf.Variable([], dtype = tf.float32)
-y = tf.Variable([2,2,2,2,2,2,4])
-y2 = tf.Variable([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
-y1 = tf.Variable([[2,2,2],[3,3,3],[4,4,4],[5,5,5]])
-h1 = tf.placeholder(tf.float32, [None, 12])
+x = [1,3,1]
+with tf.device('/device:GPU:0'):
+	a1 = tf.Variable(tf.random_normal([5, 4]))
+	a2 = tf.Variable(tf.random_normal([4, 3]))
+	b = tf.Variable([], dtype = tf.float32)
+	h = tf.Variable([], dtype = tf.float32)
+	y = tf.Variable([2,2,2,2,2,2,4])
+	y2 = tf.Variable([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+	y1 = tf.Variable([[2,2,2],[3,3,3],[4,4,4],[5,5,5]])
+	h1 = tf.placeholder(tf.float32, [None, 12])
 
 
 for word in x:
@@ -31,7 +31,7 @@ for i in range(10):
 #c = tf.concat([b1,b2,b3],0)
 init = tf.global_variables_initializer();
 
-sess = tf.Session()
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 sess.run(init)
 print(sess.run(a1))
 print(sess.run(b))
@@ -89,7 +89,7 @@ print(sess.run(x))
 print(sess.run(tf.reshape(x, [5,3])))
 print(sess.run(tf.nn.softmax(tf.to_float(matrix))))
 
-
+'''
 #------------------------read-IBM-file-test---------------------------------------------------
 
 IBMDic = {}
@@ -307,7 +307,7 @@ targetLoop = tf.while_loop(
 	mAdd0.get_shape()])
 
 print(sess.run(targetLoop)[3])
-'''
+
 
 y1 = tf.Variable([[2,2,2],[3,3,3],[4,4,4],[5,5,5]])
 
@@ -322,3 +322,4 @@ init = tf.global_variables_initializer();
 sess.run(init)
 print(sess.run(y2))
 print(sess.run(y3))
+'''

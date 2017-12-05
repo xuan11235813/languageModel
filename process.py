@@ -1,11 +1,13 @@
 import math as mt
-import lexicon_neural_network as lexiconSet 
+import lexicon_neural_network as lexiconSet
 import alignment_neural_network as alignmentSet 
 import samples
 import forward_backward as fb 
 import para
 import perplexity as pp
 import printLog
+
+
 
 class ProcessTraditional:
 	def __init__( self ):
@@ -183,8 +185,8 @@ class ProcessLSTM:
 		averageCostAlignment = 0;
 		averageCostLexicon = 0;
 		averageCostAlignmentInitialState = 0;
-		for i in range(len(sentencePairBatch)):
-			
+		#for i in range(len(sentencePairBatch)):
+		for i in range(10):
 			# read a sentence
 			sentencePair = sentencePairBatch[i]
 
@@ -208,10 +210,10 @@ class ProcessLSTM:
 			
 			# use data training lexicon neural network
 			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
-			
+
 			# use data training alignment neural network
-			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
-			
+			#costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
+			costAlignment = 0
 			# output the result
 			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
 			averageCostAlignment = (averageCostAlignment * i + costAlignment)/(i+1)
