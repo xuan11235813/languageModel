@@ -29,7 +29,9 @@ _log = printLog.Log()
 
 _process = process.ProcessLSTM()
 _process.processBatchWithBaumWelch(_data.getCurrentBatch())
-'''
+
+
+
 if _data.checkStatus() == 0:
 	batchStatus = 0
 	while True:
@@ -65,4 +67,3 @@ if _data.checkStatus() == 0:
 else:
 	_log.writeSequence('stop the program')
 	
-'''

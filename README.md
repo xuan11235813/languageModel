@@ -12,6 +12,8 @@ machine translation based on tensorflow
  -source /work/smt2/dzhu/tensorflow/tensorflow_env/bin/activate 
 qsubmit -n zgan_hmm -m 13G -t 160:00:00 -gpu -a cluster-cn-23[1-9] "bash /u/zgan/Desktop/HMMLM/languageModel/lm_cpu.sh"
 
+
+
 * runtime environment at home
  -source ~/tensorflow/bin/activate
 

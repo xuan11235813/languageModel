@@ -3,17 +3,19 @@ import numpy as np
 import math as mt
 import para
 
-
 x = [1,3,1]
-with tf.device('/device:GPU:0'):
-	a1 = tf.Variable(tf.random_normal([5, 4]))
-	a2 = tf.Variable(tf.random_normal([4, 3]))
-	b = tf.Variable([], dtype = tf.float32)
-	h = tf.Variable([], dtype = tf.float32)
-	y = tf.Variable([2,2,2,2,2,2,4])
-	y2 = tf.Variable([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
-	y1 = tf.Variable([[2,2,2],[3,3,3],[4,4,4],[5,5,5]])
-	h1 = tf.placeholder(tf.float32, [None, 12])
+
+a1 = tf.Variable(tf.random_normal([5, 4]))
+a2 = tf.Variable(tf.random_normal([4, 3]))
+b = tf.Variable([], dtype = tf.float32)
+h = tf.Variable([], dtype = tf.float32)
+y = tf.Variable([2,2,2,2,2,2,4])
+y2 = tf.Variable([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+y1 = tf.Variable([[2,2,2],[3,3,3],[4,4,4],[5,5,5]])
+y3 = tf.Variable([[2,2],[2,5]])
+y4 = tf.Variable([[2,2],[2,5]])
+y5 = tf.matmul(y3, y4);
+h1 = tf.placeholder(tf.float32, [None, 12])
 
 
 for word in x:
@@ -33,6 +35,8 @@ init = tf.global_variables_initializer();
 
 sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 sess.run(init)
+print(sess.run(y5))
+'''
 print(sess.run(a1))
 print(sess.run(b))
 _a1 = sess.run(a1)
@@ -73,7 +77,6 @@ for i in range(10):
 	print(sess.run(s[i]))
 
 
-
 print(sess.run(y1))
 
 matrix = []
@@ -81,15 +84,19 @@ for i in range(5):
 	matrix.append(y1)
 
 matrix = tf.concat(matrix, 0)
+print(sess.run(matrix))
 
 a = tf.reshape(y2, [5,1,4])
 matrix = tf.reshape(matrix, [5,4,3])
-x = tf.matmul(a, matrix)
-print(sess.run(x))
-print(sess.run(tf.reshape(x, [5,3])))
+print(sess.run(matrix))
+
+#x = tf.matmul(a, matrix)
+#print(sess.run(x))
+#print(sess.run(tf.reshape(x, [5,3])))
+
 print(sess.run(tf.nn.softmax(tf.to_float(matrix))))
 
-'''
+
 #------------------------read-IBM-file-test---------------------------------------------------
 
 IBMDic = {}
@@ -161,6 +168,7 @@ class testCase:
 		print(self.b)
 	def helloc(self):
 		print(self.c)
+
 #-------------------------------concat-stack-select-test------------------------------------
 
 projection = tf.Variable(tf.random_normal([500,200,10]))
@@ -197,6 +205,7 @@ print(sess.run(tf.add(tfSelect[0], tfSelect[1])))
 
 
 #-------------------------condition test-------------------------------------
+
 sess = tf.Session()
 
 a = tf.Variable([[3,3],[3,3]])

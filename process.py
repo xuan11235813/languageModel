@@ -185,8 +185,9 @@ class ProcessLSTM:
 		averageCostAlignment = 0;
 		averageCostLexicon = 0;
 		averageCostAlignmentInitialState = 0;
-		#for i in range(len(sentencePairBatch)):
-		for i in range(10):
+		for i in range(len(sentencePairBatch)):
+		#for i in range(10):
+			#print(i)
 			# read a sentence
 			sentencePair = sentencePairBatch[i]
 
@@ -212,13 +213,14 @@ class ProcessLSTM:
 			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
 
 			# use data training alignment neural network
-			#costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
-			costAlignment = 0
+			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
+			#costAlignment = 0
 			# output the result
 			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
 			averageCostAlignment = (averageCostAlignment * i + costAlignment)/(i+1)
 			# averageCostAlignmentInitialState = (averageCostAlignmentInitialState * i + costInitial)/(i+1)
 			self.globalSentenceNum += 1
+
 
 		self.log.writeSequence('costLexicon:  '+ repr(averageCostLexicon))
 		self.log.writeSequence('costAlignment: '+ repr(averageCostAlignment))

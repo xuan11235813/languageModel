@@ -137,37 +137,37 @@ class LSTMLexiconNet:
         self.sourceNum = 0
         self.targetNum = 0
 
-        with tf.device('/device:GPU:0'):
 
-            if (continue_pre == 0):
-                self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
-                self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
-                self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
-                self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetOutputLayer()))
-                self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
-                self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
-                self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetOutputLayer()[1]]))
-            else:
-                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_projection.npy')
-                self.weights['projection'] = tf.Variable(savedMatrix)           
-                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden1.npy')
-                self.weights['hidden1'] = tf.Variable(savedMatrix)            
-                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden2.npy')
-                self.weights['hidden2'] = tf.Variable(savedMatrix)
-                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_out.npy')
-                self.weights['out'] = tf.Variable(savedMatrix)            
-                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden1.npy')
-                self.biases['bHidden1'] = tf.Variable(savedMatrix)            
-                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden2.npy')
-                self.biases['bHidden2'] = tf.Variable(savedMatrix)            
-                savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_out.npy')
-                self.biases['out'] = tf.Variable(savedMatrix)
+        if (continue_pre == 0):
+            self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
+            self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
+            self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
+            self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetOutputLayer()))
+            self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
+            self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
+            self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetOutputLayer()[1]]))
+        else:
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_projection.npy')
+            self.weights['projection'] = tf.Variable(savedMatrix)           
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden1.npy')
+            self.weights['hidden1'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden2.npy')
+            self.weights['hidden2'] = tf.Variable(savedMatrix)
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_out.npy')
+            self.weights['out'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden1.npy')
+            self.biases['bHidden1'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden2.npy')
+            self.biases['bHidden2'] = tf.Variable(savedMatrix)            
+            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_out.npy')
+            self.biases['out'] = tf.Variable(savedMatrix)
         
 
         
         # placeholder
         # for common words
-        self.sess = sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+        #self.sess = sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+        self.sess = tf.Session()
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
@@ -180,6 +180,9 @@ class LSTMLexiconNet:
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
         self.init = tf.global_variables_initializer();
 
+        # for translation
+        self.translationPred = self.multilayerLSTMNetTranslationPredict(self.sequenceBatch, self.sourceTargetPlace)
+        self.translationProb = tf.nn.softmax(self.translationPred)
         
         #initialize
         self.sess.run(self.init)
@@ -432,12 +435,61 @@ class LSTMLexiconNet:
         out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
 
         return out
+    def multilayerLSTMNetTranslationPredict(self, sequence_batch, _sourcetargetNum):
+
+        # here should be noticed that the target number should not be minused 1
+        # we are going to predict
+        _concatOutput = tf.zeros([0,self.readyToProcessDim])
+        i0 = tf.constant(0)
+        j0 = tf.constant(0)
+        _output = tf.zeros([0,self.projOutDim])
+        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+
+        with tf.variable_scope("RNNLexiconTranslation"):
+            cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+            cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+            cell_target = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+        
+
+            initial_state_fw  = cell_fw.zero_state(1, tf.float32)
+            initial_state_bw  = cell_bw.zero_state(1, tf.float32)
+            initial_state_target = cell_target.zero_state(1, tf.float32)
+
+
+            seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
+
+
+            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, seqSource,
+                        tf.stack([_sourcetargetNum[0]]), initial_state_fw, initial_state_bw)
+            (outputTargetForward, _) = tf.nn.dynamic_rnn( cell_target, seqTarget, 
+                        tf.stack([_sourcetargetNum[1]]), initial_state_target )
+
+        outputSourceForward = outputSource[0]
+        outputSourceBackward = outputSource[1]
+        
+        combinedArray = tf.concat([tf.add(outputSourceForward[:,_sourcetargetNum[0], :], 
+            outputSourceBackward[:,_sourcetargetNum[0], :]), 
+            outputTargetForward[:,_sourcetargetNum[1],:]], 1)
+        # item = tf.reshape(item, [-1]);
+
+        readyToProcess = combinedArray
+
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
+
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
+        hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
+
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+
+        return out
     def networkPrognose(self, _sequenceBatch, lexiconLabel, _sourceNum, _targetNum):
 
         self.output = self.sess.run([self.calculatedProb],feed_dict={self.sequenceBatch : _sequenceBatch,
             self.sourceTargetPlace : [_sourceNum, _targetNum]})
         outProbability = []
         out = self.output[0]
+        
         for i in range(len(lexiconLabel)):
             outProbability.append(out[i][lexiconLabel[i]])
         return outProbability
@@ -447,3 +499,11 @@ class LSTMLexiconNet:
                                 self.probability: batch_probability,
                                 self.sourceTargetPlace : [_sourceNum, _targetNum]})
         return c
+
+    def networkTranslationPrognose(self, _sequenceBatch, _sourceNum, _targetNum):
+
+        self.output = self.sess.run([self.translationProb],feed_dict={self.sequenceBatch : _sequenceBatch,
+            self.sourceTargetPlace : [_sourceNum, _targetNum]})
+        outProbability = []
+        out = self.output[0]
+        return out

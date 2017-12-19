@@ -2,8 +2,10 @@ from time import gmtime, strftime, localtime
 
 class Log:
 	def __init__(self):
-		self.fileName = '/u/zgan/Desktop/HMMLM/languageModel/log.log'
-		self.lastRecordFileName = '/u/zgan/Desktop/HMMLM/languageModel/record.configuration.log'
+		#self.fileName = '/u/zgan/Desktop/HMMLM/languageModel/log.log'
+		#self.lastRecordFileName = '/u/zgan/Desktop/HMMLM/languageModel/record.configuration.log'
+		self.fileName = 'log.log'
+		self.lastRecordFileName = 'record.configuration.log'
 
 	def writeSequence(self, str):
 		try:
