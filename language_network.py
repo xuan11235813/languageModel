@@ -29,3 +29,4 @@ class LanguageNetwork:
     	output = self.aNet.networkTranslationInitial()
     	return output
 
+    

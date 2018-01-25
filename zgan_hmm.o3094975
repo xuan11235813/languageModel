@@ -1,0 +1,29 @@
++------- PROLOGUE SCRIPT -----------------------------------------------
+|
+| Job ID ...........: 3094975
+| Started at .......: Thu Jan 25 15:23:22 CET 2018
+| Execution host ...: cluster-cn-259
+| Cluster queue ....: 16C-64G-GPU-1080TI
+| Script ...........: /var/spool/sge/cluster-cn-259/job_scripts/3094975
+| > bash /u/zgan/Desktop/HMMLM/languageModel/lm_cpu.sh
+|
++------- PROLOGUE SCRIPT -----------------------------------------------
+/u/zgan/.bashrc: line 18: /etc/bash_completion.d/git: No such file or directory
+/u/zgan/.bashrc: line 83: /u/zgan/.bashrc_localhistory: No such file or directory
+2018-01-25 15:23:42.593596: I tensorflow/core/platform/cpu_feature_guard.cc:137] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2018-01-25 15:23:44.869975: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti major: 6 minor: 1 memoryClockRate(GHz): 1.582
+pciBusID: 0000:02:00.0
+totalMemory: 10.91GiB freeMemory: 10.75GiB
+2018-01-25 15:23:44.870017: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:02:00.0, compute capability: 6.1)
+2018-01-25 15:23:52.165942: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:02:00.0, compute capability: 6.1)
++------- EPILOGUE SCRIPT -----------------------------------------------
+|
+| Job ID ..............: 3094975
+| Stopped at ..........: Thu Jan 25 15:47:07 CET 2018
+| Resources requested .: pxe=ubuntu_16.04,h_fsize=10G,h_vmem=1536G,h_rss=18432M,s_core=0,gpu=1,scratch_free=5G,num_proc=1,h_rt=432000
+| Resources used ......: cpu=00:23:25, mem=3254.81239 GB s, io=0.19876 GB, vmem=2.441G, maxvmem=2.586G, last_file_cache=818M, last_rss=3M, max-cache=2.234G
+| Memory used .........: 3.032G / 18.000G (16.8%)
+| Total time used .....: 0:23:45
+|
++------- EPILOGUE SCRIPT -----------------------------------------------

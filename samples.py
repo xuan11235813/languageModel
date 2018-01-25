@@ -63,7 +63,8 @@ class GenerateSamples:
 		for i in range(self.targetNum):
 			for j in range(self.sourceNum):
 				#lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = lexiconGamma[i][j]
-				lexiconLabel[i * self.sourceNum + j][sentencePair._target[i]] = lexiconGamma[i][j]
+				#lexiconLabel[i * self.sourceNum + j][sentencePair._target[i]] = lexiconGamma[i][j]
+				lexiconLabel[i * self.sourceNum + j][sentencePair._target[i]] = 1
 		# create alignment label
 		jumpLimited = self.alignmentNetPara.GetJumpLimited()
 		for i in range(self.targetNum  - 1):

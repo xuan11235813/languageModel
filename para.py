@@ -38,10 +38,12 @@ class Para:
 		self.measureTargetDataFilePath = "data/dev_english.bpe"
 
 		#training property
-		self.batchSize = 128
+		self.batchSize = 20
 		self.testBatchSize = 40
 
 	# path for dataInput.py
+	def GetBatchSize(self):
+		return self.batchSize
 	def GetSourceTrainingFilePath(self):
 		return self.trainingSourceDataFilePath
 	def GetTargetTrainingFilePath(self):
@@ -118,7 +120,7 @@ class Para:
 				self.outputLayerOutput = 12000
 				self.outputLayerWordOutput = 40681
 
-			self.learningRate = 0.01
+			self.learningRate = 0.001
 			self.mode = mode
 
 
@@ -179,7 +181,7 @@ class Para:
 				self.outputLayerJumpOutput = 101
 				self.jumpLimited = 50
 
-			self.learningRate = 0.01
+			self.learningRate = 0.001
 			self.mode = mode
 			
 

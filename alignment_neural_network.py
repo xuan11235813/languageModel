@@ -536,8 +536,9 @@ class LSTMAlignmentNet:
 
     def networkTranslationPrognose(self, _sequenceBatch, _sourceNum, _targetNum):
 
+        # here the parameters of sourceTargetPlace shall be considered again
         out = self.sess.run([self.translationProb],feed_dict={self.sequenceBatch : _sequenceBatch,
-            self.sourceTargetPlace : [_sourceNum, _targetNum - 1]})
+            self.sourceTargetPlace : [_sourceNum, _targetNum]})
 
         return out[0]
     def networkTranslationInitial(self):

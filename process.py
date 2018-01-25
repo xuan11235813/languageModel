@@ -25,7 +25,7 @@ class ProcessTraditional:
 		self.perplexity = pp.Perplexity()
 		self.log = printLog.Log()
 
-		self.globalSentenceNum = 0;
+		self.globalSentenceNum = 0
 
 		print('...')
 		print("initialize the process finish")

@@ -38,7 +38,7 @@ if _data.checkStatus() == 0:
 		
 		_log.writeSequence('epoch ' + repr(epoch) + ' batch: '+ repr(globalBatch))
 		_log.writeSequence('---------------------------------------')
-		batchStatus = _data.refreshNewBatch()
+		#batchStatus = _data.refreshNewBatch()
 		if batchStatus == 1:
 			epoch += 1
 			if epoch >= epochMax:

@@ -220,7 +220,7 @@ class ReadData:
 			self.sourceTrainingFile.seek(self.sourceTrainFileCurrentPosition, 0)
 			self.targetTrainingFile.seek(self.targetTrainFileCurrentPosition, 0)
 
-			for index in range(128):
+			for index in range(self.parameter.GetBatchSize()):
 				sourceLine = self.sourceTrainingFile.readline()
 				targetLine = self.targetTrainingFile.readline()
 				sourceWordList = []
@@ -259,7 +259,7 @@ class ReadData:
 			self.sourceTrainingFile.seek(self.sourceTrainFileCurrentPosition, 0)
 			self.targetTrainingFile.seek(self.targetTrainFileCurrentPosition, 0)
 
-			for index in range(128):
+			for index in range(self.parameter.GetBatchSize()):
 				sourceLine = self.sourceTrainingFile.readline()
 				targetLine = self.targetTrainingFile.readline()
 				if sourceLine == "" or targetLine == "":
@@ -285,7 +285,7 @@ class ReadData:
 					self.trainingSentence.append(sentencePair)
 			self.sourceTrainFileCurrentPosition = self.sourceTrainingFile.tell()
 			self.targetTrainFileCurrentPosition = self.targetTrainingFile.tell()
-			if len(self.trainingSentence) == 128:
+			if len(self.trainingSentence) == self.parameter.GetBatchSize():
 				print('read a batch')
 			else:
 				print('read an incomplete batch')
