@@ -187,22 +187,6 @@ class LSTMLexiconNet:
         #initialize
         self.sess.run(self.init)
 
-        if (continue_pre == 1):
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_projection.npy')
-            self.weights['projection'] = tf.Variable(savedMatrix)           
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden1.npy')
-            self.weights['hidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden2.npy')
-            self.weights['hidden2'] = tf.Variable(savedMatrix)
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_out.npy')
-            self.weights['out'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden1.npy')
-            self.biases['bHidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden2.npy')
-            self.biases['bHidden2'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_out.npy')
-            self.biases['out'] = tf.Variable(savedMatrix)
-
 
     def saveMatrixToFile(self):
         saveMatrix = self.sess.run(self.weights['projection'])
