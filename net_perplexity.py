@@ -11,6 +11,8 @@ _data = data.ReadData(parameter.ReadTrainingFile())
 
 _log = printLog.Log()
 
+
+'''
 #initialize the process
 #_process = process.ProcessTraditional()
 
@@ -20,17 +22,19 @@ _process.processPerplexity(_data.getCurrentBatch())
 
 _process.processBatchWithBaumWelch(_data.getCurrentBatch())
 
-for i in range(10):
+for i in range(3):
 	_process.processBatch(_data.getCurrentBatch())
 	_process.processPerplexity(_data.getCurrentBatch())
 _process.recordNetwork()
 
-for i in range(10):
+for i in range(3):
 	_process.processBatch(_data.getCurrentBatch())
 	_process.processPerplexity(_data.getCurrentBatch())
 _process.recordNetwork()
 
-	
+'''
 _process_ = process.ProcessLSTM()
+
+#_process_.processBatch(_data.getCurrentBatch())
 
 _process_.processPerplexity(_data.getCurrentBatch())

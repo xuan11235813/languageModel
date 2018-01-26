@@ -140,41 +140,35 @@ class LSTMAlignmentNet:
         self.networkPathPrefix = parameter.GetNetworkStoragePath()
         self.batchSize = parameter.GetLSTMBatchSize()
          # test for file exists
-        testPath =  self.networkPathPrefix + 'alignment_weight_projection.npy'
+        testPath =  self.networkPathPrefix + 'alignmentModel.meta'
         if os.path.exists(testPath) == False:
             print('previous does not exist, start with random')
             continue_pre = 0
+        self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="alignment_weight_projection")
+        self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()), name="alignment_weight_hidden1")
+        self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()), name="alignment_weight_hidden2")
+        self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetJumpLayer()), name="alignment_weight_out")
+        self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]), name="alignment_bias_bHidden1")
+        self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]), name="alignment_bias_bHidden2")
+        self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetJumpLayer()[1]]), name="alignment_bias_out")
 
-        if (continue_pre == 0):
-            self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
-            self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
-            self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
-            self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetJumpLayer()))
-            self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
-            self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
-            self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetJumpLayer()[1]]))
 
-        else:
-            savedMatrix = np.load(self.networkPathPrefix + 'alignment_weight_projection.npy')
-            self.weights['projection'] = tf.Variable(savedMatrix)           
-            savedMatrix = np.load(self.networkPathPrefix + 'alignment_weight_hidden1.npy')
-            self.weights['hidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'alignment_weight_hidden2.npy')
-            self.weights['hidden2'] = tf.Variable(savedMatrix)
-            savedMatrix = np.load(self.networkPathPrefix + 'alignment_weight_out.npy')
-            self.weights['out'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'alignment_bias_bHidden1.npy')
-            self.biases['bHidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'alignment_bias_bHidden2.npy')
-            self.biases['bHidden2'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'alignment_bias_out.npy')
-            self.biases['out'] = tf.Variable(savedMatrix)
         #network
         
         # placeholder
         # for common words
 
         self.sess = tf.Session()
+        self.saver = tf.train.Saver({
+            "alignment_weight_projection": self.weights['projection'],
+            "alignment_weight_hidden1": self.weights['hidden1'],
+            "alignment_weight_hidden2": self.weights['hidden2'],
+            "alignment_weight_out": self.weights['out'],
+            "alignment_bias_bHidden1": self.biases['bHidden1'],
+            "alignment_bias_bHidden2": self.biases['bHidden2'],
+            "alignment_bias_out": self.biases['out']
+
+            })
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
@@ -193,31 +187,20 @@ class LSTMAlignmentNet:
         self.optimizerInit = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.costInit)
 
         self.init = tf.global_variables_initializer();
-
         
         # for translation
         self.translationPred = self.multilayerLSTMNetTranslationPredict(self.sequenceBatch, self.sourceTargetPlace)
         self.translationProb = tf.nn.softmax(self.translationPred)
         #initialize
         self.sess.run(self.init)
+        if (continue_pre == 1):
+            print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+            self.saver.restore(self.sess, self.networkPathPrefix + 'alignmentModel')
+ 
 
 
     def saveMatrixToFile(self):
-        saveMatrix = self.sess.run(self.weights['projection'])
-        np.save(self.networkPathPrefix + 'alignment_weight_projection', saveMatrix)
-        saveMatrix = self.sess.run(self.weights['hidden1'])
-        np.save(self.networkPathPrefix + 'alignment_weight_hidden1', saveMatrix)
-        saveMatrix = self.sess.run(self.weights['hidden2'])
-        np.save(self.networkPathPrefix + 'alignment_weight_hidden2', saveMatrix)
-        saveMatrix = self.sess.run(self.weights['out'])
-        np.save(self.networkPathPrefix + 'alignment_weight_out', saveMatrix)
-        saveMatrix = self.sess.run(self.biases['bHidden1'])
-        np.save(self.networkPathPrefix + 'alignment_bias_bHidden1', saveMatrix)
-        saveMatrix = self.sess.run(self.biases['bHidden2'])
-        np.save(self.networkPathPrefix + 'alignment_bias_bHidden2', saveMatrix)
-        saveMatrix = self.sess.run(self.biases['out'])
-        np.save(self.networkPathPrefix + 'alignment_bias_out', saveMatrix)
-
+        self.saver.save(self.sess, self.networkPathPrefix + 'alignmentModel')
 
     def multilayerLSTMNetModern(self, sequence_batch, _sourcetargetNum):
 

@@ -129,7 +129,7 @@ class LSTMLexiconNet:
         self.networkPathPrefix = parameter.GetNetworkStoragePath()
         self.batchSize = parameter.GetLSTMBatchSize()
         # test for file exists
-        testPath =  self.networkPathPrefix + 'lexicon_weight_projection.npy'
+        testPath =  self.networkPathPrefix + 'lexiconModel.meta'
         if os.path.exists(testPath) == False:
             print('previous does not exist, start with random')
             continue_pre = 0
@@ -138,36 +138,31 @@ class LSTMLexiconNet:
         self.targetNum = 0
 
 
-        if (continue_pre == 0):
-            self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()))
-            self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()))
-            self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()))
-            self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetOutputLayer()))
-            self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]))
-            self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]))
-            self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetOutputLayer()[1]]))
-        else:
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_projection.npy')
-            self.weights['projection'] = tf.Variable(savedMatrix)           
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden1.npy')
-            self.weights['hidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_hidden2.npy')
-            self.weights['hidden2'] = tf.Variable(savedMatrix)
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_weight_out.npy')
-            self.weights['out'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden1.npy')
-            self.biases['bHidden1'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_bHidden2.npy')
-            self.biases['bHidden2'] = tf.Variable(savedMatrix)            
-            savedMatrix = np.load(self.networkPathPrefix + 'lexicon_bias_out.npy')
-            self.biases['out'] = tf.Variable(savedMatrix)
-        
+        self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="lexicon_weight_projection")
+        self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()), name="lexicon_weight_hidden1")
+        self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()), name="lexicon_weight_hidden2")
+        self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetOutputLayer()), name="lexicon_weight_out")
+        self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]), name="lexicon_bias_bHidden1")
+        self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]), name="lexicon_bias_bHidden2")
+        self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetOutputLayer()[1]]), name="lexicon_bias_out")
+ 
+
 
         
         # placeholder
         # for common words
         #self.sess = sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
         self.sess = tf.Session()
+        self.saver = tf.train.Saver({
+            "lexicon_bias_out": self.weights['projection'],
+            "lexicon_weight_hidden1": self.weights['hidden1'],
+            "lexicon_weight_hidden2": self.weights['hidden2'],
+            "lexicon_weight_out": self.weights['out'],
+            "lexicon_bias_bHidden1": self.biases['bHidden1'],
+            "lexicon_bias_bHidden2": self.biases['bHidden2'],
+            "lexicon_bias_out": self.biases['out']
+
+            })
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
@@ -178,7 +173,8 @@ class LSTMLexiconNet:
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
-        self.init = tf.global_variables_initializer();
+        self.init = tf.global_variables_initializer()
+        
 
         # for translation
         self.translationPred = self.multilayerLSTMNetTranslationPredict(self.sequenceBatch, self.sourceTargetPlace)
@@ -186,23 +182,13 @@ class LSTMLexiconNet:
         
         #initialize
         self.sess.run(self.init)
+        if (continue_pre == 1):
+            self.saver.restore(self.sess, self.networkPathPrefix + 'lexiconModel')
+        
 
 
     def saveMatrixToFile(self):
-        saveMatrix = self.sess.run(self.weights['projection'])
-        np.save(self.networkPathPrefix + 'lexicon_weight_projection', saveMatrix)
-        saveMatrix = self.sess.run(self.weights['hidden1'])
-        np.save(self.networkPathPrefix + 'lexicon_weight_hidden1', saveMatrix)
-        saveMatrix = self.sess.run(self.weights['hidden2'])
-        np.save(self.networkPathPrefix + 'lexicon_weight_hidden2', saveMatrix)
-        saveMatrix = self.sess.run(self.weights['out'])
-        np.save(self.networkPathPrefix + 'lexicon_weight_out', saveMatrix)
-        saveMatrix = self.sess.run(self.biases['bHidden1'])
-        np.save(self.networkPathPrefix + 'lexicon_bias_bHidden1', saveMatrix)
-        saveMatrix = self.sess.run(self.biases['bHidden2'])
-        np.save(self.networkPathPrefix + 'lexicon_bias_bHidden2', saveMatrix)
-        saveMatrix = self.sess.run(self.biases['out'])
-        np.save(self.networkPathPrefix + 'lexicon_bias_out', saveMatrix)
+        self.saver.save(self.sess, self.networkPathPrefix + 'lexiconModel')
 
     def multilayerLSTMNetModern(self, sequence_batch, _sourcetargetNum):
 

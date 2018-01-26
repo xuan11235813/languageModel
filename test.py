@@ -2,9 +2,9 @@ import tensorflow as tf
 import numpy as np
 import math as mt
 import para
-
+'''
 x = [1,3,1]
-
+i = 0
 a1 = tf.Variable(tf.random_normal([5, 4]))
 a2 = tf.Variable(tf.random_normal([4, 3]))
 b = tf.Variable([], dtype = tf.float32)
@@ -13,7 +13,11 @@ y = tf.Variable([2,2,2,2,2,2,4])
 y2 = tf.Variable([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
 y1 = tf.Variable([[2,2,2],[3,3,3],[4,4,4],[5,5,5]])
 y3 = tf.Variable([[2,2],[2,5]])
-y4 = tf.Variable([[2,2],[2,5]])
+if (i == 1):
+	y4 = tf.Variable([[2,2],[2,5]])
+else:
+	y4 = tf.Variable(tf.random_normal([2, 2]))
+
 y5 = tf.matmul(y3, y4);
 h1 = tf.placeholder(tf.float32, [None, 12])
 
@@ -36,7 +40,7 @@ init = tf.global_variables_initializer();
 sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 sess.run(init)
 print(sess.run(y5))
-'''
+
 print(sess.run(a1))
 print(sess.run(b))
 _a1 = sess.run(a1)
@@ -331,4 +335,49 @@ init = tf.global_variables_initializer();
 sess.run(init)
 print(sess.run(y2))
 print(sess.run(y3))
+
+
+#--------------------save-and-restore-test------------------------
+M = tf.Variable(tf.random_normal([2,2]),name="M")
+
+x = tf.Variable([[2.0],[3.0]], name="x",dtype=tf.float32)
+
+y = tf.matmul(M,x)
+
+sess = tf.Session()
+
+saver = tf.train.Saver({
+	"M" : M,
+	"x":x
+	})
+
+init = tf.global_variables_initializer()
+
+sess.run(init)
+l = sess.run(y)
+print(l)
+
+saver.save(sess, 'a.ckpt')
+
+
 '''
+
+M = tf.Variable(tf.random_normal([2,2]), name="M")
+
+x = tf.Variable([[2.0],[3.0]], name="x", dtype=tf.float32)
+
+y = tf.matmul(M,x)
+
+sess = tf.Session()
+
+saver = tf.train.Saver()
+
+init = tf.global_variables_initializer()
+
+sess.run(init)
+
+saver.restore(sess, 'a.ckpt')
+
+l = sess.run(y)
+print(l)
+
