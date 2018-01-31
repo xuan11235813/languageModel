@@ -144,13 +144,13 @@ class LSTMAlignmentNet:
         if os.path.exists(testPath) == False:
             print('previous does not exist, start with random')
             continue_pre = 0
-        self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="alignment_weight_projection")
-        self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()), name="alignment_weight_hidden1")
-        self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()), name="alignment_weight_hidden2")
-        self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetJumpLayer()), name="alignment_weight_out")
-        self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]), name="alignment_bias_bHidden1")
-        self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]), name="alignment_bias_bHidden2")
-        self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetJumpLayer()[1]]), name="alignment_bias_out")
+        self.weights_projection = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="alignment_weight_projection")
+        self.weights_hidden1 = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()), name="alignment_weight_hidden1")
+        self.weights_hidden2 = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()), name="alignment_weight_hidden2")
+        self.weights_out = tf.Variable(tf.random_normal(self.netPara.GetJumpLayer()), name="alignment_weight_out")
+        self.biases_bHidden1 = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]), name="alignment_bias_bHidden1")
+        self.biases_bHidden2 = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]), name="alignment_bias_bHidden2")
+        self.biases_out = tf.Variable(tf.random_normal([self.netPara.GetJumpLayer()[1]]), name="alignment_bias_out")
 
 
         #network
@@ -160,13 +160,13 @@ class LSTMAlignmentNet:
 
         self.sess = tf.Session()
         self.saver = tf.train.Saver({
-            "alignment_weight_projection": self.weights['projection'],
-            "alignment_weight_hidden1": self.weights['hidden1'],
-            "alignment_weight_hidden2": self.weights['hidden2'],
-            "alignment_weight_out": self.weights['out'],
-            "alignment_bias_bHidden1": self.biases['bHidden1'],
-            "alignment_bias_bHidden2": self.biases['bHidden2'],
-            "alignment_bias_out": self.biases['out']
+            "alignment_weight_projection": self.weights_projection,
+            "alignment_weight_hidden1": self.weights_hidden1,
+            "alignment_weight_hidden2": self.weights_hidden2,
+            "alignment_weight_out": self.weights_out,
+            "alignment_bias_bHidden1": self.biases_bHidden1,
+            "alignment_bias_bHidden2": self.biases_bHidden2,
+            "alignment_bias_out": self.biases_out
 
             })
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
@@ -194,7 +194,6 @@ class LSTMAlignmentNet:
         #initialize
         self.sess.run(self.init)
         if (continue_pre == 1):
-            print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
             self.saver.restore(self.sess, self.networkPathPrefix + 'alignmentModel')
  
 
@@ -208,7 +207,7 @@ class LSTMAlignmentNet:
         i0 = tf.constant(0)
         j0 = tf.constant(0)
         _output = tf.zeros([0,self.projOutDim])
-        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+        concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
         with tf.variable_scope("RNNAlignment"):
             cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
             cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
@@ -272,13 +271,13 @@ class LSTMAlignmentNet:
 
         readyToProcess = targetLoop[3]
 
-        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights_hidden1), self.biases_bHidden1)
         hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
 
-        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])        
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights_hidden2), self.biases_bHidden2)        
         hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
-        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
 
@@ -295,7 +294,7 @@ class LSTMAlignmentNet:
         cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
         #initial state
         zeroState  = cell.zero_state(self.batchSize, tf.float32)
-        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+        concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
 
         # here if you change batchSize from 1 to other value here maybe something wrong.
         _stateC = zeroState[0]
@@ -424,13 +423,13 @@ class LSTMAlignmentNet:
 
         readyToProcess = targetLoop[3]
 
-        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights_hidden1), self.biases_bHidden1)
         hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
 
-        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights_hidden2), self.biases_bHidden2)
         hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
-        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
 
@@ -442,7 +441,7 @@ class LSTMAlignmentNet:
         i0 = tf.constant(0)
         j0 = tf.constant(0)
         _output = tf.zeros([0,self.projOutDim])
-        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+        concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
         with tf.variable_scope("RNNAlignmentTranslation"):
             cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
             cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
@@ -472,30 +471,30 @@ class LSTMAlignmentNet:
 
         readyToProcess = combinedArray
 
-        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights_hidden1), self.biases_bHidden1)
         hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
 
-        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])        
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights_hidden2), self.biases_bHidden2)        
         hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
-        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
     
     def getLSTMInitial(self):
         cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
         zeroState  = cell.zero_state(2, tf.float32)
-        concatVector = tf.nn.embedding_lookup(self.weights['projection'], [[0],[self.sourceTargetBias]])
+        concatVector = tf.nn.embedding_lookup(self.weights_projection, [[0],[self.sourceTargetBias]])
         outputSlice, _ = cell(concatVector[:,0,:], zeroState)
         readyToProcess = [tf.reshape(outputSlice, [-1])]
 
-        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights_hidden1), self.biases_bHidden1)
         hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
 
-        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights_hidden2), self.biases_bHidden2)
         hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
-        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
 

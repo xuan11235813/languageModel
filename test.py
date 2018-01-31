@@ -357,7 +357,7 @@ sess.run(init)
 l = sess.run(y)
 print(l)
 
-saver.save(sess, 'a.ckpt')
+saver.save(sess, './data/network/test/a.ckpt')
 
 
 '''
@@ -376,7 +376,7 @@ init = tf.global_variables_initializer()
 
 sess.run(init)
 
-saver.restore(sess, 'a.ckpt')
+saver.restore(sess, './data/network/test/a.ckpt')
 
 l = sess.run(y)
 print(l)

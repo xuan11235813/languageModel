@@ -138,13 +138,13 @@ class LSTMLexiconNet:
         self.targetNum = 0
 
 
-        self.weights['projection'] = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="lexicon_weight_projection")
-        self.weights['hidden1'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()), name="lexicon_weight_hidden1")
-        self.weights['hidden2'] = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()), name="lexicon_weight_hidden2")
-        self.weights['out'] = tf.Variable(tf.random_normal(self.netPara.GetOutputLayer()), name="lexicon_weight_out")
-        self.biases['bHidden1'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]), name="lexicon_bias_bHidden1")
-        self.biases['bHidden2'] = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]), name="lexicon_bias_bHidden2")
-        self.biases['out'] = tf.Variable(tf.random_normal([self.netPara.GetOutputLayer()[1]]), name="lexicon_bias_out")
+        self.weights_projection = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="lexicon_weight_projection")
+        self.weights_hidden1 = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()), name="lexicon_weight_hidden1")
+        self.weights_hidden2 = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()), name="lexicon_weight_hidden2")
+        self.weights_out = tf.Variable(tf.random_normal(self.netPara.GetOutputLayer()), name="lexicon_weight_out")
+        self.biases_bHidden1 = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]), name="lexicon_bias_bHidden1")
+        self.biases_bHidden2 = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]), name="lexicon_bias_bHidden2")
+        self.biases_out = tf.Variable(tf.random_normal([self.netPara.GetOutputLayer()[1]]), name="lexicon_bias_out")
  
 
 
@@ -154,13 +154,13 @@ class LSTMLexiconNet:
         #self.sess = sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
         self.sess = tf.Session()
         self.saver = tf.train.Saver({
-            "lexicon_bias_out": self.weights['projection'],
-            "lexicon_weight_hidden1": self.weights['hidden1'],
-            "lexicon_weight_hidden2": self.weights['hidden2'],
-            "lexicon_weight_out": self.weights['out'],
-            "lexicon_bias_bHidden1": self.biases['bHidden1'],
-            "lexicon_bias_bHidden2": self.biases['bHidden2'],
-            "lexicon_bias_out": self.biases['out']
+            "lexicon_bias_out": self.weights_projection,
+            "lexicon_weight_hidden1": self.weights_hidden1,
+            "lexicon_weight_hidden2": self.weights_hidden2,
+            "lexicon_weight_out": self.weights_out,
+            "lexicon_bias_bHidden1": self.biases_bHidden1,
+            "lexicon_bias_bHidden2": self.biases_bHidden2,
+            "lexicon_bias_out": self.biases_out
 
             })
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
@@ -196,7 +196,7 @@ class LSTMLexiconNet:
         i0 = tf.constant(0)
         j0 = tf.constant(0)
         _output = tf.zeros([0,self.projOutDim])
-        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+        concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
 
         with tf.variable_scope("RNNLexicon"):
             cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
@@ -261,13 +261,13 @@ class LSTMLexiconNet:
 
         readyToProcess = targetLoop[3]
 
-        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights_hidden1), self.biases_bHidden1)
         hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
 
-        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights_hidden2), self.biases_bHidden2)
         hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
-        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
 
@@ -281,7 +281,7 @@ class LSTMLexiconNet:
         cell = tf.contrib.rnn.BasicLSTMCell(200, forget_bias=0.0, state_is_tuple=True, reuse=None)
         #initial state
         zeroState  = cell.zero_state(self.batchSize, tf.float32)
-        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+        concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
         # here if you change batchSize from 1 to other value here maybe something wrong.
         _stateC = zeroState[0]
         _stateH = zeroState[1]
@@ -412,13 +412,13 @@ class LSTMLexiconNet:
 
         readyToProcess = targetLoop[3]
 
-        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights_hidden1), self.biases_bHidden1)
         hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
 
-        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights_hidden2), self.biases_bHidden2)
         hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
-        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
     def multilayerLSTMNetTranslationPredict(self, sequence_batch, _sourcetargetNum):
@@ -429,7 +429,7 @@ class LSTMLexiconNet:
         i0 = tf.constant(0)
         j0 = tf.constant(0)
         _output = tf.zeros([0,self.projOutDim])
-        concatVector = tf.nn.embedding_lookup(self.weights['projection'], sequence_batch)
+        concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
 
         with tf.variable_scope("RNNLexiconTranslation"):
             cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
@@ -460,13 +460,13 @@ class LSTMLexiconNet:
 
         readyToProcess = combinedArray
 
-        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights['hidden1']), self.biases['bHidden1'])
+        hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights_hidden1), self.biases_bHidden1)
         hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
 
-        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights['hidden2']), self.biases['bHidden2'])
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights_hidden2), self.biases_bHidden2)
         hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
 
-        out = tf.add(tf.matmul(hiddenLayer2, self.weights['out']),self.biases['out'])
+        out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
     def networkPrognose(self, _sequenceBatch, lexiconLabel, _sourceNum, _targetNum):
