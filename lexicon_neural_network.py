@@ -183,6 +183,7 @@ class LSTMLexiconNet:
         #initialize
         self.sess.run(self.init)
         if (continue_pre == 1):
+            print('aaaaaaaaaaaaaaaaaaaaaaaaaaaa')
             self.saver.restore(self.sess, self.networkPathPrefix + 'lexiconModel')
         
 
