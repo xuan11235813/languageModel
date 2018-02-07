@@ -146,23 +146,19 @@ class LSTMLexiconNet:
         self.biases_bHidden2 = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]), name="lexicon_bias_bHidden2")
         self.biases_out = tf.Variable(tf.random_normal([self.netPara.GetOutputLayer()[1]]), name="lexicon_bias_out")
  
-
-
+        with tf.variable_scope("RNNLexicon"):
+            self.cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+            self.cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+            self.cell_target = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+            self.initial_state_fw  = self.cell_fw.zero_state(1, tf.float32)
+            self.initial_state_bw  = self.cell_bw.zero_state(1, tf.float32)
+            self.initial_state_target = self.cell_target.zero_state(1, tf.float32)
         
         # placeholder
         # for common words
         #self.sess = sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
         self.sess = tf.Session()
-        self.saver = tf.train.Saver({
-            "lexicon_bias_out": self.weights_projection,
-            "lexicon_weight_hidden1": self.weights_hidden1,
-            "lexicon_weight_hidden2": self.weights_hidden2,
-            "lexicon_weight_out": self.weights_out,
-            "lexicon_bias_bHidden1": self.biases_bHidden1,
-            "lexicon_bias_bHidden2": self.biases_bHidden2,
-            "lexicon_bias_out": self.biases_out
-
-            })
+        self.saver = tf.train.Saver()
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
@@ -181,10 +177,14 @@ class LSTMLexiconNet:
         self.translationProb = tf.nn.softmax(self.translationPred)
         
         #initialize
-        self.sess.run(self.init)
+        
+
         if (continue_pre == 1):
-            print('aaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+            print('read from trained file')
             self.saver.restore(self.sess, self.networkPathPrefix + 'lexiconModel')
+        else:
+            self.sess.run(self.init)
+
         
 
 
@@ -200,23 +200,14 @@ class LSTMLexiconNet:
         concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
 
         with tf.variable_scope("RNNLexicon"):
-            cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-            cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-            cell_target = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-        
-
-            initial_state_fw  = cell_fw.zero_state(1, tf.float32)
-            initial_state_bw  = cell_bw.zero_state(1, tf.float32)
-            initial_state_target = cell_target.zero_state(1, tf.float32)
-
 
             seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
 
 
-            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, seqSource,
-                        tf.stack([_sourcetargetNum[0]]), initial_state_fw, initial_state_bw)
-            (outputTargetForward, _) = tf.nn.dynamic_rnn( cell_target, seqTarget, 
-                        tf.stack([_sourcetargetNum[1]]), initial_state_target )
+            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(self.cell_fw, self.cell_bw, seqSource,
+                        tf.stack([_sourcetargetNum[0]]), self.initial_state_fw, self.initial_state_bw)
+            (outputTargetForward, _) = tf.nn.dynamic_rnn( self.cell_target, seqTarget, 
+                        tf.stack([_sourcetargetNum[1]]), self.initial_state_target )
 
         outputSourceForward = outputSource[0]
         outputSourceBackward = outputSource[1]
@@ -432,24 +423,15 @@ class LSTMLexiconNet:
         _output = tf.zeros([0,self.projOutDim])
         concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
 
-        with tf.variable_scope("RNNLexiconTranslation"):
-            cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-            cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-            cell_target = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-        
-
-            initial_state_fw  = cell_fw.zero_state(1, tf.float32)
-            initial_state_bw  = cell_bw.zero_state(1, tf.float32)
-            initial_state_target = cell_target.zero_state(1, tf.float32)
-
+        with tf.variable_scope("RNNLexicon"):
 
             seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
 
 
-            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, seqSource,
-                        tf.stack([_sourcetargetNum[0]]), initial_state_fw, initial_state_bw)
-            (outputTargetForward, _) = tf.nn.dynamic_rnn( cell_target, seqTarget, 
-                        tf.stack([_sourcetargetNum[1]]), initial_state_target )
+            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(self.cell_fw, self.cell_bw, seqSource,
+                        tf.stack([_sourcetargetNum[0]]), self.initial_state_fw, self.initial_state_bw)
+            (outputTargetForward, _) = tf.nn.dynamic_rnn( self.cell_target, seqTarget, 
+                        tf.stack([_sourcetargetNum[1]]), self.initial_state_target )
 
         outputSourceForward = outputSource[0]
         outputSourceBackward = outputSource[1]

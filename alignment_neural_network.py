@@ -151,24 +151,23 @@ class LSTMAlignmentNet:
         self.biases_bHidden1 = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer1st()[1]]), name="alignment_bias_bHidden1")
         self.biases_bHidden2 = tf.Variable(tf.random_normal([self.netPara.GetHiddenLayer2nd()[1]]), name="alignment_bias_bHidden2")
         self.biases_out = tf.Variable(tf.random_normal([self.netPara.GetJumpLayer()[1]]), name="alignment_bias_out")
-
-
+        
+        with tf.variable_scope("RNNAlignment"):
+            self.cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+            self.cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+            self.cell_target = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+            self.initial_state_fw  = self.cell_fw.zero_state(1, tf.float32)
+            self.initial_state_bw  = self.cell_bw.zero_state(1, tf.float32)
+            self.initial_state_target = self.cell_target.zero_state(1, tf.float32)
+            self.cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+            self.zeroState  = self.cell.zero_state(2, tf.float32)
         #network
         
         # placeholder
         # for common words
 
         self.sess = tf.Session()
-        self.saver = tf.train.Saver({
-            "alignment_weight_projection": self.weights_projection,
-            "alignment_weight_hidden1": self.weights_hidden1,
-            "alignment_weight_hidden2": self.weights_hidden2,
-            "alignment_weight_out": self.weights_out,
-            "alignment_bias_bHidden1": self.biases_bHidden1,
-            "alignment_bias_bHidden2": self.biases_bHidden2,
-            "alignment_bias_out": self.biases_out
-
-            })
+        self.saver = tf.train.Saver()
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
@@ -192,10 +191,12 @@ class LSTMAlignmentNet:
         self.translationPred = self.multilayerLSTMNetTranslationPredict(self.sequenceBatch, self.sourceTargetPlace)
         self.translationProb = tf.nn.softmax(self.translationPred)
         #initialize
-        self.sess.run(self.init)
+        
         if (continue_pre == 1):
-            print('aaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+            print('read from trained file')
             self.saver.restore(self.sess, self.networkPathPrefix + 'alignmentModel')
+        else:
+            self.sess.run(self.init)
  
 
 
@@ -210,23 +211,14 @@ class LSTMAlignmentNet:
         _output = tf.zeros([0,self.projOutDim])
         concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
         with tf.variable_scope("RNNAlignment"):
-            cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-            cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-            cell_target = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-        
-
-            initial_state_fw  = cell_fw.zero_state(1, tf.float32)
-            initial_state_bw  = cell_bw.zero_state(1, tf.float32)
-            initial_state_target = cell_target.zero_state(1, tf.float32)
-
 
             seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
 
 
-            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, seqSource,
-                        tf.stack([_sourcetargetNum[0]]), initial_state_fw, initial_state_bw)
-            (outputTargetForward, _) = tf.nn.dynamic_rnn( cell_target, seqTarget, 
-                        tf.stack([_sourcetargetNum[1]]), initial_state_target )
+            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(self.cell_fw, self.cell_bw, seqSource,
+                        tf.stack([_sourcetargetNum[0]]), self.initial_state_fw, self.initial_state_bw)
+            (outputTargetForward, _) = tf.nn.dynamic_rnn( self.cell_target, seqTarget, 
+                        tf.stack([_sourcetargetNum[1]]), self.initial_state_target )
 
         outputSourceForward = outputSource[0]
         outputSourceBackward = outputSource[1]
@@ -443,24 +435,14 @@ class LSTMAlignmentNet:
         j0 = tf.constant(0)
         _output = tf.zeros([0,self.projOutDim])
         concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
-        with tf.variable_scope("RNNAlignmentTranslation"):
-            cell_fw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-            cell_bw = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-            cell_target = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-        
-
-            initial_state_fw  = cell_fw.zero_state(1, tf.float32)
-            initial_state_bw  = cell_bw.zero_state(1, tf.float32)
-            initial_state_target = cell_target.zero_state(1, tf.float32)
-
-
+        with tf.variable_scope("RNNAlignment"):
             seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
 
 
-            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, seqSource,
-                        tf.stack([_sourcetargetNum[0]]), initial_state_fw, initial_state_bw)
-            (outputTargetForward, _) = tf.nn.dynamic_rnn( cell_target, seqTarget, 
-                        tf.stack([_sourcetargetNum[1]]), initial_state_target )
+            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(self.cell_fw, self.cell_bw, seqSource,
+                        tf.stack([_sourcetargetNum[0]]), self.initial_state_fw, self.initial_state_bw)
+            (outputTargetForward, _) = tf.nn.dynamic_rnn( self.cell_target, seqTarget, 
+                        tf.stack([_sourcetargetNum[1]]), self.initial_state_target )
 
         outputSourceForward = outputSource[0]
         outputSourceBackward = outputSource[1]
@@ -483,10 +465,11 @@ class LSTMAlignmentNet:
         return out
     
     def getLSTMInitial(self):
-        cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
-        zeroState  = cell.zero_state(2, tf.float32)
-        concatVector = tf.nn.embedding_lookup(self.weights_projection, [[0],[self.sourceTargetBias]])
-        outputSlice, _ = cell(concatVector[:,0,:], zeroState)
+        with tf.variable_scope("RNNAlignment"):
+        #cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
+        #zeroState  = cell.zero_state(2, tf.float32)
+            concatVector = tf.nn.embedding_lookup(self.weights_projection, [[0],[self.sourceTargetBias]])
+            outputSlice, _ = self.cell(concatVector[:,0,:], self.zeroState)
         readyToProcess = [tf.reshape(outputSlice, [-1])]
 
         hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights_hidden1), self.biases_bHidden1)
