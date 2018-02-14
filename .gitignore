@@ -1,5 +1,8 @@
 *.pyc
 *.npy
 *.log
+*.meta
+*.index
 
 data/ibm1
+data/netwotk

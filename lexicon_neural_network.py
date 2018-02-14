@@ -158,7 +158,7 @@ class LSTMLexiconNet:
         # for common words
         #self.sess = sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
         self.sess = tf.Session()
-        self.saver = tf.train.Saver()
+        
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
@@ -175,7 +175,7 @@ class LSTMLexiconNet:
         # for translation
         self.translationPred = self.multilayerLSTMNetTranslationPredict(self.sequenceBatch, self.sourceTargetPlace)
         self.translationProb = tf.nn.softmax(self.translationPred)
-        
+        self.saver = tf.train.Saver()
         #initialize
         
 

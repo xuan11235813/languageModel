@@ -167,7 +167,7 @@ class LSTMAlignmentNet:
         # for common words
 
         self.sess = tf.Session()
-        self.saver = tf.train.Saver()
+        
         self.sequenceBatch = tf.placeholder(tf.int32, [None, None])
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
@@ -184,14 +184,14 @@ class LSTMAlignmentNet:
         self.calculatedProbInit = tf.nn.softmax(self.predInit)
         self.costInit = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.predInit))
         self.optimizerInit = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.costInit)
-
+        
         self.init = tf.global_variables_initializer();
         
         # for translation
         self.translationPred = self.multilayerLSTMNetTranslationPredict(self.sequenceBatch, self.sourceTargetPlace)
         self.translationProb = tf.nn.softmax(self.translationPred)
         #initialize
-        
+        self.saver = tf.train.Saver()
         if (continue_pre == 1):
             print('read from trained file')
             self.saver.restore(self.sess, self.networkPathPrefix + 'alignmentModel')

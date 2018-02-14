@@ -13,10 +13,10 @@ _log = printLog.Log()
 
 print(_data.getCurrentBatch()[0]._source)
 
-
+'''
 #initialize the process
 #_process = process.ProcessTraditional()
-'''
+
 _process = process.ProcessLSTM()
 
 _process.processPerplexity(_data.getCurrentBatch())

@@ -4,4 +4,4 @@
 
 source /u/zgan/tensorflow/bin/activate;
 
-python /u/zgan/Desktop/HMMLM/languageModel/net_perplexity.py;
+python /u/zgan/Desktop/HMMLM/languageModel/main.py;
