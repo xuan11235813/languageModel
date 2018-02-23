@@ -16,7 +16,9 @@ class ForwardBackward:
 		# for limited the jump
 		jumpLimited = self.alignmentNet.GetJumpLimited()
 		forward = []
+
 		forwardZero =  lexicon[0:sourceNum]
+
 		forward.append( forwardZero )
 		for i in range(targetNum-1):
 			forwardItem = []

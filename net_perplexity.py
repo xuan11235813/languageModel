@@ -41,4 +41,5 @@ _process_ = process.ProcessLSTM()
 
 #_process_.processBatch(_data.getCurrentBatch())
 
-_process_.processPerplexity(_data.getCurrentBatch())
+#_process_.processPerplexity(_data.getCurrentBatch())
+_process_ .testOneSentence( _data.getCurrentBatch()[1] )

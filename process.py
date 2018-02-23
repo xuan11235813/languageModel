@@ -6,6 +6,7 @@ import forward_backward as fb
 import para
 import perplexity as pp
 import printLog
+import numpy
 
 
 
@@ -299,3 +300,47 @@ class ProcessLSTM:
 		# get result
 		print('perplexity:  '+ repr(self.perplexity.getPerplexity()))
 		self.log.writeSequence('perplexity:  '+ repr(self.perplexity.getPerplexity()))
+
+	def testOneSentence(self, sentencePair_):
+
+		self.perplexity.reInitialize()
+
+		sentencePair = sentencePair_
+		# get the size of target and source
+		targetNum, sourceNum = sentencePair.getSentenceSize()
+
+		# generate lexicon training samples
+		samplesLexicon, labelsLexicon = self.generator.getLSTMLexiconSample( sentencePair )
+
+		# generate alignment samples, sampleInitial is the initial distribution of path (initial state distribution)
+		samplesAlignment = self.generator.getLSTMAlignmentSample( sentencePair )
+		
+		# use IBM to get initial lexicon data
+		outputLexicon = sentencePair.getIBMLexiconInitialData()
+
+
+		# use baum-welch algorithms to optimize the lexicon probability and alignment probability
+		gamma, alignmentGamma = self.forwardBackward.calculateForwardBackwardInitial( outputLexicon, targetNum, sourceNum )
+			
+		# generate lables from gamma which obtained from baum-welch algorithms
+		lexiconLabel, alignmentLabel, alignmentLabelInitial = self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
+			
+		print(sourceNum)
+		print(targetNum)
+
+		print(len(outputLexicon))
+		print(outputLexicon)
+		print(samplesLexicon)
+		print(gamma)
+		print(alignmentGamma)
+		print(len(lexiconLabel))
+		print(len(alignmentLabel))
+		print(alignmentLabel[2])
+		print(lexiconLabel[2])
+		for j in range(56):
+			for i in range(12000):
+				if lexiconLabel[j][i] >0:
+					print('**********')
+					print(j)
+					print(i)
+					print(lexiconLabel[j][i])

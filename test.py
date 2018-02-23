@@ -360,7 +360,6 @@ print(l)
 saver.save(sess, './data/network/test/a.ckpt')
 
 
-'''
 
 M = tf.Variable(tf.random_normal([2,2]), name="M")
 
@@ -381,3 +380,15 @@ saver.restore(sess, './data/network/test/a.ckpt')
 l = sess.run(y)
 print(l)
 
+'''
+
+y = tf.Variable([2.0,2.0,2.0,2.0,2.0,2.0,4.0])
+
+label = tf.Variable([0.2,0.0,0.0,0.0,0.0,0.0,0.0])
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label,logits=y))
+sess = tf.Session()
+init = tf.global_variables_initializer()
+
+sess.run(init)
+c = sess.run(cost)
+print(c)

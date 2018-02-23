@@ -38,8 +38,8 @@ class Para:
 		self.measureTargetDataFilePath = "data/dev_english.bpe"
 
 		#training property
-		self.batchSize = 40
-		self.testBatchSize = 40
+		self.batchSize = 128
+		self.testBatchSize = 500
 
 	# path for dataInput.py
 	def GetBatchSize(self):

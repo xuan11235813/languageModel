@@ -165,7 +165,7 @@ class LSTMLexiconNet:
         self.sourceTargetPlace = tf.placeholder(tf.int32, [2])
         self.probability = tf.placeholder("float", [None, self.netPara.GetLabelSize()])
         #self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sequenceBatch, self.sourceTargetPlace)
-        self.pred = self.multilayerLSTMNetModern(self.sequenceBatch, self.sourceTargetPlace)
+        self.pred, self.testF = self.multilayerLSTMNetModern(self.sequenceBatch, self.sourceTargetPlace)
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
         self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
@@ -254,14 +254,14 @@ class LSTMLexiconNet:
         readyToProcess = targetLoop[3]
 
         hiddenLayer1 = tf.add(tf.matmul(readyToProcess, self.weights_hidden1), self.biases_bHidden1)
-        hiddenLayer1 = tf.nn.tanh(hiddenLayer1)
+        hiddenLayer1_ = tf.nn.tanh(hiddenLayer1)
 
-        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1, self.weights_hidden2), self.biases_bHidden2)
-        hiddenLayer2 = tf.nn.tanh(hiddenLayer2)
+        hiddenLayer2 = tf.add(tf.matmul(hiddenLayer1_, self.weights_hidden2), self.biases_bHidden2)
+        hiddenLayer2_ = tf.nn.tanh(hiddenLayer2)
 
-        out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
+        out = tf.add(tf.matmul(hiddenLayer2_, self.weights_out),self.biases_out)
 
-        return out
+        return out, readyToProcess
 
 
     def multilayerLSTMNetForOneSentencePlaceholder(self, sequence_batch, _sourceTargetNum):
@@ -454,11 +454,12 @@ class LSTMLexiconNet:
         return out
     def networkPrognose(self, _sequenceBatch, lexiconLabel, _sourceNum, _targetNum):
 
-        self.output = self.sess.run([self.calculatedProb],feed_dict={self.sequenceBatch : _sequenceBatch,
+        self.output, fuck = self.sess.run([self.calculatedProb, self.testF],feed_dict={self.sequenceBatch : _sequenceBatch,
             self.sourceTargetPlace : [_sourceNum, _targetNum]})
         outProbability = []
-        out = self.output[0]
-        
+        out = self.output
+        print(self.output)
+        print(fuck)
         for i in range(len(lexiconLabel)):
             outProbability.append(out[i][lexiconLabel[i]])
         return outProbability
