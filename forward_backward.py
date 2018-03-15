@@ -19,9 +19,11 @@ class ForwardBackward:
 
 		forwardZero =  lexicon[0:sourceNum]
 
+
 		forward.append( forwardZero )
 		for i in range(targetNum-1):
 			forwardItem = []
+
 			for j in range(sourceNum):
 				item = []
 				for j_ in range(sourceNum):
@@ -31,7 +33,9 @@ class ForwardBackward:
 						prob = probAlignment
 					item.append( prob * forward[-1][j_] )
 				forwardItem.append(np.sum(item) * lexicon[(i+1)*sourceNum + j])
+
 			forward.append(forwardItem)
+
 
 
 		backward = []
@@ -53,6 +57,7 @@ class ForwardBackward:
 
 		forward = np.array(forward)
 		backward = np.array(backward)
+
 		gamma = forward * backward
 		gamma = self.selfNormalization(gamma)
 		alignmentGamma = []

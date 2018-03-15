@@ -57,6 +57,7 @@ class GenerateSamples:
 		alignmentLabel = np.zeros([(self.targetNum - 1) * self.sourceNum, self.alignmentNetPara.GetJumpLabelSize()])
 		initialAlignmentLabel = np.zeros(self.alignmentNetPara.GetJumpLabelSize())
 		lexiconLabel = np.zeros([self.targetNum * self.sourceNum, self.lexiconNetPara.GetLabelSize()])
+		lexiconRate = np.zeros(self.targetNum * self.sourceNum)
 		center = int(self.alignmentNetPara.GetJumpLabelSize()/2)
 		
 		# create lexicon label
@@ -64,6 +65,7 @@ class GenerateSamples:
 			for j in range(self.sourceNum):
 				#lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = lexiconGamma[i][j]
 				lexiconLabel[i * self.sourceNum + j][sentencePair._target[i]] = lexiconGamma[i][j]
+				lexiconRate[i * self.sourceNum + j] = lexiconGamma[i][j]
 				#lexiconLabel[i * self.sourceNum + j][sentencePair._target[i]] = 1
 		# create alignment label
 		jumpLimited = self.alignmentNetPara.GetJumpLimited()

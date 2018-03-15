@@ -163,12 +163,14 @@ class LSTMLexiconNet:
         self.sourceNumPlace = tf.placeholder(tf.int32)
         self.targetNumPlace = tf.placeholder(tf.int32)
         self.sourceTargetPlace = tf.placeholder(tf.int32, [2])
+        self.learningRate = tf.placeholder("float")
         self.probability = tf.placeholder("float", [None, self.netPara.GetLabelSize()])
         #self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sequenceBatch, self.sourceTargetPlace)
         self.pred, self.testF = self.multilayerLSTMNetModern(self.sequenceBatch, self.sourceTargetPlace)
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
-        self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
+        self.optimizer = tf.train.GradientDescentOptimizer(learning_rate= self.learningRate).minimize(self.cost)
+        #self.optimizer = tf.train.AdamOptimizer(learning_rate= self.learningRate).minimize(self.cost)
         self.init = tf.global_variables_initializer()
         
 
@@ -185,7 +187,6 @@ class LSTMLexiconNet:
         else:
             self.sess.run(self.init)
 
-        
 
 
     def saveMatrixToFile(self):
@@ -261,7 +262,7 @@ class LSTMLexiconNet:
 
         out = tf.add(tf.matmul(hiddenLayer2_, self.weights_out),self.biases_out)
 
-        return out, readyToProcess
+        return out, hiddenLayer1_
 
 
     def multilayerLSTMNetForOneSentencePlaceholder(self, sequence_batch, _sourceTargetNum):
@@ -458,16 +459,18 @@ class LSTMLexiconNet:
             self.sourceTargetPlace : [_sourceNum, _targetNum]})
         outProbability = []
         out = self.output
-        print(self.output)
-        print(fuck)
+        #print(out.size)
+        print(out)
+
         for i in range(len(lexiconLabel)):
             outProbability.append(out[i][lexiconLabel[i]])
         return outProbability
 
-    def trainingBatch(self, _sequenceBatch, batch_probability, _sourceNum, _targetNum):
+    def trainingBatch(self, _sequenceBatch, batch_probability, _sourceNum, _targetNum, learningRate):
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequenceBatch: _sequenceBatch,
                                 self.probability: batch_probability,
-                                self.sourceTargetPlace : [_sourceNum, _targetNum]})
+                                self.sourceTargetPlace : [_sourceNum, _targetNum],
+                                self.learningRate: learningRate})
         return c
 
     def networkTranslationPrognose(self, _sequenceBatch, _sourceNum, _targetNum):

@@ -39,7 +39,7 @@ class Para:
 
 		#training property
 		self.batchSize = 128
-		self.testBatchSize = 500
+		self.testBatchSize = 250
 
 	# path for dataInput.py
 	def GetBatchSize(self):
@@ -120,7 +120,9 @@ class Para:
 				self.outputLayerOutput = 12000
 				self.outputLayerWordOutput = 40681
 
-			self.learningRate = 0.001
+			self.learningRate = 0.003
+			self.greaterLearningRate = 0.001
+			self.smallerLearningRate = 0.001
 			self.mode = mode
 
 
@@ -146,6 +148,12 @@ class Para:
 			return self.outputLayerOutput
 		def GetLearningRate(self):
 			return self.learningRate
+		def GetGreaterLearningRate(self):
+			
+			return self.greaterLearningRate
+		def GetSmallerLearningRate(self):
+
+			return self.smallerLearningRate
 
 	#for lexicon neural network
 	class AlignmentNeuralNetwork:
@@ -181,7 +189,9 @@ class Para:
 				self.outputLayerJumpOutput = 101
 				self.jumpLimited = 50
 
-			self.learningRate = 0.001
+			self.learningRate = 0.003
+			self.greaterLearningRate = 0.003
+			self.smallerLearningRate = 0.001
 			self.mode = mode
 			
 
@@ -209,6 +219,10 @@ class Para:
 			return self.jumpLimited
 		def GetLearningRate(self):
 			return self.learningRate
+		def GetGreaterLearningRate(self):			
+			return self.greaterLearningRate
+		def GetSmallerLearningRate(self):
+			return self.smallerLearningRate
 
 	class AlignmentNeuralNetworkUnitTest:
 

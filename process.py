@@ -64,12 +64,12 @@ class ProcessTraditional:
 			lexiconLabel, alignmentLabel, alignmentLabelInitial = self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
 			
 			# use data training lexicon neural network
-			costLexicon = self.lNet.trainingBatch(samplesLexicon, lexiconLabel)
+			costLexicon = self.lNet.trainingBatch(samplesLexicon, lexiconLabel, para.Para().LexiconNeuralNetwork().GetGreaterLearningRate())
 			
 			# use data training alignment neural network
 			# costAlignment = self.aNet.trainingBatch(samplesAlignment, alignmentLabel)
 			# costInitial = self.aNet.trainingInitialState(sampleInitial, alignmentLabelInitial)
-			costAlignment = self.aNet.trainingBatchWithInitial(samplesAlignment, alignmentLabel, sampleInitial, alignmentLabelInitial)
+			costAlignment = self.aNet.trainingBatchWithInitial(samplesAlignment, alignmentLabel, sampleInitial, alignmentLabelInitial, para.Para().AlignmentNeuralNetwork().GetGreaterLearningRate())
 			
 			# output the result
 			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
@@ -111,10 +111,10 @@ class ProcessTraditional:
 			lexiconLabel, alignmentLabel, alignmentLabelInitial  = self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
 			
 			# use data training lexicon neural network
-			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
+			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum, para.Para().LexiconNeuralNetwork().GetSmallerLearningRate())
 			
 			# use data training alignment neural network
-			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial)
+			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, para.Para().AlignmentNeuralNetwork().GetSmallerLearningRate())
 			
 			# output the result
 			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
@@ -206,15 +206,15 @@ class ProcessLSTM:
 
 			# use baum-welch algorithms to optimize the lexicon probability and alignment probability
 			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackwardInitial( outputLexicon, targetNum, sourceNum )
-			
+
 			# generate lables from gamma which obtained from baum-welch algorithms
-			lexiconLabel, alignmentLabel, alignmentLabelInitial = self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
+			lexiconLabel, alignmentLabel, alignmentLabelInitial= self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
 			
 			# use data training lexicon neural network
-			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
+			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum, para.Para().LexiconNeuralNetwork().GetGreaterLearningRate())
 
 			# use data training alignment neural network
-			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
+			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum, para.Para().AlignmentNeuralNetwork().GetGreaterLearningRate())
 			#costAlignment = 0
 			# output the result
 			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
@@ -257,10 +257,10 @@ class ProcessLSTM:
 			
 
 			# train the network
-			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum)
+			costLexicon = self.lNet.trainingBatch([samplesLexicon], lexiconLabel, sourceNum, targetNum, para.Para().LexiconNeuralNetwork().GetSmallerLearningRate())
 			
 			# use data training alignment neural network
-			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum)
+			costAlignment = self.aNet.trainingBatchWithInitial([samplesAlignment], alignmentLabel, alignmentLabelInitial, sourceNum, targetNum, para.Para().AlignmentNeuralNetwork().GetSmallerLearningRate())
 			
 			# output the result
 			averageCostLexicon = (averageCostLexicon * i + costLexicon)/(i+1)
@@ -294,7 +294,8 @@ class ProcessLSTM:
 			samplesAlignment = self.generator.getLSTMAlignmentSample( sentencePair )
 			outputLexicon = self.lNet.networkPrognose([samplesLexicon], labelsLexicon, sourceNum, targetNum)
 			outputAlignment, outputAlignmentInitial = self.aNet.networkPrognose([samplesAlignment], sourceNum, targetNum)
-
+			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackward( outputLexicon, outputAlignment, targetNum, sourceNum, outputAlignmentInitial )
+			#print(outputLexicon)
 			self.perplexity.addSequence(outputLexicon, outputAlignment, outputAlignmentInitial, targetNum, sourceNum)
 		
 		# get result
@@ -302,10 +303,12 @@ class ProcessLSTM:
 		self.log.writeSequence('perplexity:  '+ repr(self.perplexity.getPerplexity()))
 
 	def testOneSentence(self, sentencePair_):
-
+		
 		self.perplexity.reInitialize()
 
 		sentencePair = sentencePair_
+		'''
+		
 		# get the size of target and source
 		targetNum, sourceNum = sentencePair.getSentenceSize()
 
@@ -337,10 +340,28 @@ class ProcessLSTM:
 		print(len(alignmentLabel))
 		print(alignmentLabel[2])
 		print(lexiconLabel[2])
-		for j in range(56):
+		for j in range(77):
 			for i in range(12000):
 				if lexiconLabel[j][i] >0:
 					print('**********')
 					print(j)
 					print(i)
 					print(lexiconLabel[j][i])
+
+		'''
+
+		targetNum, sourceNum = sentencePair.getSentenceSize()
+		samplesLexicon, labelsLexicon = self.generator.getLSTMLexiconSample( sentencePair )
+		samplesAlignment = self.generator.getLSTMAlignmentSample( sentencePair )
+		outputLexicon = self.lNet.networkPrognose([samplesLexicon], labelsLexicon, sourceNum, targetNum)
+		outputAlignment, outputAlignmentInitial = self.aNet.networkPrognose([samplesAlignment], sourceNum, targetNum)
+		'''
+		print(len(outputLexicon))
+		print(numpy.resize(outputLexicon,(11,7)))
+		for i in range(len(outputLexicon)):
+			print('**********')
+			print(i)
+			print(outputLexicon[i])
+			'''
+
+		

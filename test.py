@@ -382,13 +382,16 @@ print(l)
 
 '''
 
-y = tf.Variable([2.0,2.0,2.0,2.0,2.0,2.0,4.0])
+y = tf.Variable([0.1,0.2,0.3,0.2,0.1,0.1,0.0])
 
-label = tf.Variable([0.2,0.0,0.0,0.0,0.0,0.0,0.0])
+label = tf.Variable([0.0,0.1,0.8,0.1,0.0,0.0,0.0])
+pred = tf.nn.softmax(y)
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label,logits=y))
 sess = tf.Session()
 init = tf.global_variables_initializer()
 
 sess.run(init)
-c = sess.run(cost)
+c, p= sess.run([cost, pred])
 print(c)
+	
+print(p)

@@ -156,6 +156,7 @@ class ReadIBM:
 				prob = 0
 		else:
 			prob = 0
+
 		return prob
 	def findIBMProb(self, source, target):
 		prob = []
@@ -236,6 +237,7 @@ class ReadData:
 					if targetIndex != -1:
 						sentencePair._target.append(targetIndex)
 						targetWordList.append(targetWord)
+
 				prob = self.IBMWordDic.findIBMProb(sourceWordList, targetWordList)
 				sentencePair._IBM1Data = prob
 				if sentencePair.checkSentence() == 0:

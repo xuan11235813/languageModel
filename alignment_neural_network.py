@@ -173,18 +173,19 @@ class LSTMAlignmentNet:
         self.targetNumPlace = tf.placeholder(tf.int32)
         self.sourceTargetPlace = tf.placeholder(tf.int32, [2])
         self.probability = tf.placeholder("float", [None, self.netPara.GetJumpLabelSize()])
+        self.learningRate = tf.placeholder("float")
         #self.pred = self.multilayerLSTMNetForOneSentencePlaceholder(self.sequenceBatch, self.sourceTargetPlace)
         self.pred = self.multilayerLSTMNetModern(self.sequenceBatch, self.sourceTargetPlace)
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
-        self.optimizer = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.cost)
-        
+        self.optimizer = tf.train.GradientDescentOptimizer(learning_rate= self.learningRate).minimize(self.cost)
+        #self.optimizer = tf.train.AdamOptimizer(learning_rate= self.learningRate).minimize(self.cost)
         # only for zero input
         self.predInit = self.getLSTMInitial()
         self.calculatedProbInit = tf.nn.softmax(self.predInit)
         self.costInit = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.predInit))
-        self.optimizerInit = tf.train.AdamOptimizer(learning_rate= self.netPara.GetLearningRate()).minimize(self.costInit)
-        
+        self.optimizerInit = tf.train.GradientDescentOptimizer(learning_rate= self.learningRate).minimize(self.costInit)
+        #self.optimizerInit = tf.train.AdamOptimizer(learning_rate= self.learningRate).minimize(self.costInit)
         self.init = tf.global_variables_initializer();
         
         # for translation
@@ -488,16 +489,18 @@ class LSTMAlignmentNet:
         out = self.sess.run([self.calculatedProb],feed_dict={self.sequenceBatch : _sequenceBatch,
             self.sourceTargetPlace : [_sourceNum, _targetNum - 1]})
 
-
+        # print(out[0])
         return out[0], outInitial
 
-    def trainingBatchWithInitial( self, _sequenceBatch, probability, probability_initial, _sourceNum, _targetNum):
+    def trainingBatchWithInitial( self, _sequenceBatch, probability, probability_initial, _sourceNum, _targetNum, learningRate):
         probability = np.array(probability)
 
-        _, c = self.sess.run([self.optimizerInit, self.costInit], feed_dict = {self.probability :[probability_initial]})
+        _, c = self.sess.run([self.optimizerInit, self.costInit], feed_dict = {self.probability :[probability_initial],
+                                                                            self.learningRate : learningRate})
         _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequenceBatch: _sequenceBatch,
                                 self.probability: probability,
-                                self.sourceTargetPlace : [_sourceNum, _targetNum -1]})
+                                self.sourceTargetPlace : [_sourceNum, _targetNum -1],
+                                self.learningRate : learningRate})
         return c
 
     def networkTranslationPrognose(self, _sequenceBatch, _sourceNum, _targetNum):
