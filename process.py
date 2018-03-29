@@ -188,7 +188,7 @@ class ProcessLSTM:
 		averageCostAlignmentInitialState = 0;
 		for i in range(len(sentencePairBatch)):
 		#for i in range(10):
-			#print(i)
+			
 			# read a sentence
 			sentencePair = sentencePairBatch[i]
 
@@ -295,7 +295,7 @@ class ProcessLSTM:
 			outputLexicon = self.lNet.networkPrognose([samplesLexicon], labelsLexicon, sourceNum, targetNum)
 			outputAlignment, outputAlignmentInitial = self.aNet.networkPrognose([samplesAlignment], sourceNum, targetNum)
 			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackward( outputLexicon, outputAlignment, targetNum, sourceNum, outputAlignmentInitial )
-			#print(outputLexicon)
+			#print(gamma)
 			self.perplexity.addSequence(outputLexicon, outputAlignment, outputAlignmentInitial, targetNum, sourceNum)
 		
 		# get result
@@ -355,6 +355,7 @@ class ProcessLSTM:
 		samplesAlignment = self.generator.getLSTMAlignmentSample( sentencePair )
 		outputLexicon = self.lNet.networkPrognose([samplesLexicon], labelsLexicon, sourceNum, targetNum)
 		outputAlignment, outputAlignmentInitial = self.aNet.networkPrognose([samplesAlignment], sourceNum, targetNum)
+		gamma, alignmentGamma = self.forwardBackward.calculateForwardBackward( outputLexicon, outputAlignment, targetNum, sourceNum, outputAlignmentInitial )
 		'''
 		print(len(outputLexicon))
 		print(numpy.resize(outputLexicon,(11,7)))

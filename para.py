@@ -38,8 +38,8 @@ class Para:
 		self.measureTargetDataFilePath = "data/dev_english.bpe"
 
 		#training property
-		self.batchSize = 128
-		self.testBatchSize = 250
+		self.batchSize = 10
+		self.testBatchSize = 10
 
 	# path for dataInput.py
 	def GetBatchSize(self):
@@ -83,7 +83,7 @@ class Para:
 	def ReadTestFile(self):
 		return 1
 	def GetTargetSourceBias(self):
-		return 41000
+		return 0 # without any bias by splitting the projection matrix
 	def GetLSTMBatchSize(self):
 		return 1
 
@@ -100,7 +100,7 @@ class Para:
 
 			if mode == 'lstm':
 
-				self.projectionLayerInputDim = 80000
+				self.projectionLayerInputDim = 40000
 				self.projectionLayerOutputDim = 200
 				# 200 for source, 200 for target
 				self.hiddenLayer1stInput = 400
@@ -167,7 +167,7 @@ class Para:
 
 			if mode == 'lstm':
 
-				self.projectionLayerInputDim = 80000
+				self.projectionLayerInputDim = 40000
 				self.projectionLayerOutputDim = 200
 				# 200 for source, 200 for target
 				self.hiddenLayer1stInput = 400

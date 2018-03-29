@@ -23,7 +23,7 @@ class GenerateSamples:
 		# add an zero point with target bias to start of target
 		# for a sentence pair with 5 source words and 6 target words
 		# |s1|s2|s3|s4|s5|t0(zeros point)|t1|t2|t3|t4|t5|
-		# it is because we use s1-sn and t1-t(n-1)  to generate prediction of tn
+		# it is because we use s1-sn and t1-t(n-1) to generate prediction of tn
 		for i in range( self.sourceNum ):
 			samples.append(sentencePair._source[i])
 		samples.append(self.bias)
@@ -66,7 +66,7 @@ class GenerateSamples:
 				#lexiconLabel[i * self.sourceNum + j][sentencePair._targetClass[i]] = lexiconGamma[i][j]
 				lexiconLabel[i * self.sourceNum + j][sentencePair._target[i]] = lexiconGamma[i][j]
 				lexiconRate[i * self.sourceNum + j] = lexiconGamma[i][j]
-				#lexiconLabel[i * self.sourceNum + j][sentencePair._target[i]] = 1
+				#lexiconLabel[i * self.sourceNum + j][0] = 1
 		# create alignment label
 		jumpLimited = self.alignmentNetPara.GetJumpLimited()
 		for i in range(self.targetNum  - 1):

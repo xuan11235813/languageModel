@@ -144,7 +144,8 @@ class LSTMAlignmentNet:
         if os.path.exists(testPath) == False:
             print('previous does not exist, start with random')
             continue_pre = 0
-        self.weights_projection = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="alignment_weight_projection")
+        self.weights_projection_source = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="alignment_weight_projection_source")
+        self.weights_projection_target= tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="alignment_weight_projection_target")
         self.weights_hidden1 = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()), name="alignment_weight_hidden1")
         self.weights_hidden2 = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()), name="alignment_weight_hidden2")
         self.weights_out = tf.Variable(tf.random_normal(self.netPara.GetJumpLayer()), name="alignment_weight_out")
@@ -178,14 +179,14 @@ class LSTMAlignmentNet:
         self.pred = self.multilayerLSTMNetModern(self.sequenceBatch, self.sourceTargetPlace)
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
-        self.optimizer = tf.train.GradientDescentOptimizer(learning_rate= self.learningRate).minimize(self.cost)
-        #self.optimizer = tf.train.AdamOptimizer(learning_rate= self.learningRate).minimize(self.cost)
+        #self.optimizer = tf.train.GradientDescentOptimizer(learning_rate= self.learningRate).minimize(self.cost)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate= self.learningRate).minimize(self.cost)
         # only for zero input
         self.predInit = self.getLSTMInitial()
         self.calculatedProbInit = tf.nn.softmax(self.predInit)
         self.costInit = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.predInit))
-        self.optimizerInit = tf.train.GradientDescentOptimizer(learning_rate= self.learningRate).minimize(self.costInit)
-        #self.optimizerInit = tf.train.AdamOptimizer(learning_rate= self.learningRate).minimize(self.costInit)
+        #self.optimizerInit = tf.train.GradientDescentOptimizer(learning_rate= self.learningRate).minimize(self.costInit)
+        self.optimizerInit = tf.train.AdamOptimizer(learning_rate= self.learningRate).minimize(self.costInit)
         self.init = tf.global_variables_initializer();
         
         # for translation
@@ -206,14 +207,18 @@ class LSTMAlignmentNet:
 
     def multilayerLSTMNetModern(self, sequence_batch, _sourcetargetNum):
 
+
         _concatOutput = tf.zeros([0,self.readyToProcessDim])
         i0 = tf.constant(0)
         j0 = tf.constant(0)
         _output = tf.zeros([0,self.projOutDim])
-        concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
+        seqIndexSource, seqIndexTarget = tf.split(sequence_batch, _sourcetargetNum, 1)
+        seqSource = tf.nn.embedding_lookup(self.weights_projection_source, seqIndexSource)
+        seqTarget = tf.nn.embedding_lookup(self.weights_projection_target, seqIndexTarget)
+        
         with tf.variable_scope("RNNAlignment"):
 
-            seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
+            #seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
 
 
             (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(self.cell_fw, self.cell_bw, seqSource,
@@ -275,7 +280,7 @@ class LSTMAlignmentNet:
 
         return out
 
-
+        '''
     def multilayerLSTMNetForOneSentencePlaceholder(self, sequence_batch, _sourceTargetNum):
 
         _sourceNum = _sourceTargetNum[0]
@@ -427,10 +432,31 @@ class LSTMAlignmentNet:
 
         return out
 
+        '''
     def multilayerLSTMNetTranslationPredict(self, sequence_batch, _sourcetargetNum):
 
         # here should be noticed that the target number should not be minused 1
         # we are going to predict
+
+
+        _concatOutput = tf.zeros([0,self.readyToProcessDim])
+        i0 = tf.constant(0)
+        j0 = tf.constant(0)
+        _output = tf.zeros([0,self.projOutDim])
+        seqIndexSource, seqIndexTarget = tf.split(sequence_batch, _sourcetargetNum, 1)
+        seqSource = tf.nn.embedding_lookup(self.weights_projection_source, seqIndexSource)
+        seqTarget = tf.nn.embedding_lookup(self.weights_projection_target, seqIndexTarget)
+        
+        with tf.variable_scope("RNNAlignment"):
+
+            #seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
+
+
+            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(self.cell_fw, self.cell_bw, seqSource,
+                        tf.stack([_sourcetargetNum[0]]), self.initial_state_fw, self.initial_state_bw)
+            (outputTargetForward, _) = tf.nn.dynamic_rnn( self.cell_target, seqTarget, 
+                        tf.stack([_sourcetargetNum[1]]), self.initial_state_target )
+        '''
         _concatOutput = tf.zeros([0,self.readyToProcessDim])
         i0 = tf.constant(0)
         j0 = tf.constant(0)
@@ -444,6 +470,7 @@ class LSTMAlignmentNet:
                         tf.stack([_sourcetargetNum[0]]), self.initial_state_fw, self.initial_state_bw)
             (outputTargetForward, _) = tf.nn.dynamic_rnn( self.cell_target, seqTarget, 
                         tf.stack([_sourcetargetNum[1]]), self.initial_state_target )
+    '''
 
         outputSourceForward = outputSource[0]
         outputSourceBackward = outputSource[1]
@@ -464,12 +491,14 @@ class LSTMAlignmentNet:
         out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
-    
+        
     def getLSTMInitial(self):
         with tf.variable_scope("RNNAlignment"):
         #cell = tf.contrib.rnn.BasicLSTMCell(self.projOutDim, forget_bias=0.0, state_is_tuple=True, reuse=None)
         #zeroState  = cell.zero_state(2, tf.float32)
-            concatVector = tf.nn.embedding_lookup(self.weights_projection, [[0],[self.sourceTargetBias]])
+            sourceZero = tf.nn.embedding_lookup(self.weights_projection_source,[[0]])
+            targetZero = tf.nn.embedding_lookup(self.weights_projection_target,[[self.sourceTargetBias]])
+            concatVector = tf.concat([sourceZero, targetZero],0)       
             outputSlice, _ = self.cell(concatVector[:,0,:], self.zeroState)
         readyToProcess = [tf.reshape(outputSlice, [-1])]
 
@@ -489,7 +518,7 @@ class LSTMAlignmentNet:
         out = self.sess.run([self.calculatedProb],feed_dict={self.sequenceBatch : _sequenceBatch,
             self.sourceTargetPlace : [_sourceNum, _targetNum - 1]})
 
-        # print(out[0])
+
         return out[0], outInitial
 
     def trainingBatchWithInitial( self, _sequenceBatch, probability, probability_initial, _sourceNum, _targetNum, learningRate):

@@ -58,10 +58,30 @@ _process.processBatchWithBaumWelch(_data.getCurrentBatch())
 _process.processPerplexity(_data.getCurrentBatch())
 _process.processBatchWithBaumWelch(_data.getCurrentBatch())
 _process.processPerplexity(_data.getCurrentBatch())
-
+_process.recordNetwork()
 print("hahahahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 
-for i in range(500):
+for i in range(20):
+	_process.processBatchWithBaumWelch(_data.getCurrentBatch())
+	_process.processPerplexity(_data.getCurrentBatch())
+_process.recordNetwork()
+for i in range(20):
+	_process.processBatchWithBaumWelch(_data.getCurrentBatch())
+	_process.processPerplexity(_data.getCurrentBatch())
+_process.recordNetwork()
+for i in range(20):
+	_process.processBatchWithBaumWelch(_data.getCurrentBatch())
+	_process.processPerplexity(_data.getCurrentBatch())
+_process.recordNetwork()
+for i in range(20):
+	_process.processBatchWithBaumWelch(_data.getCurrentBatch())
+	_process.processPerplexity(_data.getCurrentBatch())
+_process.recordNetwork()
+for i in range(20):
+	_process.processBatchWithBaumWelch(_data.getCurrentBatch())
+	_process.processPerplexity(_data.getCurrentBatch())
+_process.recordNetwork()
+for i in range(20):
 	_process.processBatchWithBaumWelch(_data.getCurrentBatch())
 	_process.processPerplexity(_data.getCurrentBatch())
 _process.recordNetwork()
@@ -76,4 +96,6 @@ _process_ = process.ProcessLSTM()
 _process_ .testOneSentence( _data.getCurrentBatch()[0] )
 
 _process_ .testOneSentence( _data.getCurrentBatch()[1] )
+
+_process_ .testOneSentence( _data.getCurrentBatch()[2] )
 '''

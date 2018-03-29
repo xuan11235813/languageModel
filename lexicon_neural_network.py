@@ -138,7 +138,8 @@ class LSTMLexiconNet:
         self.targetNum = 0
 
 
-        self.weights_projection = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="lexicon_weight_projection")
+        self.weights_projection_source = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="lexicon_weight_projection_source")
+        self.weights_projection_target = tf.Variable(tf.random_normal(self.netPara.GetProjectionLayer()), name="lexicon_weight_projection_target")
         self.weights_hidden1 = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer1st()), name="lexicon_weight_hidden1")
         self.weights_hidden2 = tf.Variable(tf.random_normal(self.netPara.GetHiddenLayer2nd()), name="lexicon_weight_hidden2")
         self.weights_out = tf.Variable(tf.random_normal(self.netPara.GetOutputLayer()), name="lexicon_weight_out")
@@ -169,8 +170,8 @@ class LSTMLexiconNet:
         self.pred, self.testF = self.multilayerLSTMNetModern(self.sequenceBatch, self.sourceTargetPlace)
         self.calculatedProb = tf.nn.softmax(self.pred)
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.probability,logits=self.pred))
-        self.optimizer = tf.train.GradientDescentOptimizer(learning_rate= self.learningRate).minimize(self.cost)
-        #self.optimizer = tf.train.AdamOptimizer(learning_rate= self.learningRate).minimize(self.cost)
+        #self.optimizer = tf.train.GradientDescentOptimizer(learning_rate= self.learningRate).minimize(self.cost)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate= self.learningRate).minimize(self.cost)
         self.init = tf.global_variables_initializer()
         
 
@@ -198,11 +199,13 @@ class LSTMLexiconNet:
         i0 = tf.constant(0)
         j0 = tf.constant(0)
         _output = tf.zeros([0,self.projOutDim])
-        concatVector = tf.nn.embedding_lookup(self.weights_projection, sequence_batch)
+        seqIndexSource, seqIndexTarget = tf.split(sequence_batch, _sourcetargetNum, 1)
+        seqSource = tf.nn.embedding_lookup(self.weights_projection_source, seqIndexSource)
+        seqTarget = tf.nn.embedding_lookup(self.weights_projection_target, seqIndexTarget)
 
         with tf.variable_scope("RNNLexicon"):
 
-            seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
+            #seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
 
 
             (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(self.cell_fw, self.cell_bw, seqSource,
@@ -262,9 +265,9 @@ class LSTMLexiconNet:
 
         out = tf.add(tf.matmul(hiddenLayer2_, self.weights_out),self.biases_out)
 
-        return out, hiddenLayer1_
+        return out, readyToProcess
 
-
+    '''
     def multilayerLSTMNetForOneSentencePlaceholder(self, sequence_batch, _sourceTargetNum):
 
         _sourceNum = _sourceTargetNum[0]
@@ -414,10 +417,30 @@ class LSTMLexiconNet:
         out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
+
+        '''
     def multilayerLSTMNetTranslationPredict(self, sequence_batch, _sourcetargetNum):
 
         # here should be noticed that the target number should not be minused 1
         # we are going to predict
+        _concatOutput = tf.zeros([0,self.readyToProcessDim])
+        i0 = tf.constant(0)
+        j0 = tf.constant(0)
+        _output = tf.zeros([0,self.projOutDim])
+        seqIndexSource, seqIndexTarget = tf.split(sequence_batch, _sourcetargetNum, 1)
+        seqSource = tf.nn.embedding_lookup(self.weights_projection_source, seqIndexSource)
+        seqTarget = tf.nn.embedding_lookup(self.weights_projection_target, seqIndexTarget)
+
+        with tf.variable_scope("RNNLexicon"):
+
+            #seqSource, seqTarget = tf.split(concatVector, _sourcetargetNum, 1)
+
+
+            (outputSource, _) = tf.nn.bidirectional_dynamic_rnn(self.cell_fw, self.cell_bw, seqSource,
+                        tf.stack([_sourcetargetNum[0]]), self.initial_state_fw, self.initial_state_bw)
+            (outputTargetForward, _) = tf.nn.dynamic_rnn( self.cell_target, seqTarget, 
+                        tf.stack([_sourcetargetNum[1]]), self.initial_state_target )
+            '''
         _concatOutput = tf.zeros([0,self.readyToProcessDim])
         i0 = tf.constant(0)
         j0 = tf.constant(0)
@@ -433,6 +456,7 @@ class LSTMLexiconNet:
                         tf.stack([_sourcetargetNum[0]]), self.initial_state_fw, self.initial_state_bw)
             (outputTargetForward, _) = tf.nn.dynamic_rnn( self.cell_target, seqTarget, 
                         tf.stack([_sourcetargetNum[1]]), self.initial_state_target )
+'''
 
         outputSourceForward = outputSource[0]
         outputSourceBackward = outputSource[1]
@@ -453,24 +477,25 @@ class LSTMLexiconNet:
         out = tf.add(tf.matmul(hiddenLayer2, self.weights_out),self.biases_out)
 
         return out
+
+        
     def networkPrognose(self, _sequenceBatch, lexiconLabel, _sourceNum, _targetNum):
 
         self.output, fuck = self.sess.run([self.calculatedProb, self.testF],feed_dict={self.sequenceBatch : _sequenceBatch,
             self.sourceTargetPlace : [_sourceNum, _targetNum]})
         outProbability = []
         out = self.output
-        #print(out.size)
         print(out)
-
         for i in range(len(lexiconLabel)):
             outProbability.append(out[i][lexiconLabel[i]])
         return outProbability
 
     def trainingBatch(self, _sequenceBatch, batch_probability, _sourceNum, _targetNum, learningRate):
-        _, c = self.sess.run([self.optimizer, self.cost], feed_dict={self.sequenceBatch: _sequenceBatch,
+        _, c, fuck = self.sess.run([self.optimizer, self.cost, self.testF], feed_dict={self.sequenceBatch: _sequenceBatch,
                                 self.probability: batch_probability,
                                 self.sourceTargetPlace : [_sourceNum, _targetNum],
                                 self.learningRate: learningRate})
+        #print(fuck)
         return c
 
     def networkTranslationPrognose(self, _sequenceBatch, _sourceNum, _targetNum):
