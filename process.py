@@ -205,8 +205,8 @@ class ProcessLSTM:
 			outputLexicon = sentencePair.getIBMLexiconInitialData()
 
 			# use baum-welch algorithms to optimize the lexicon probability and alignment probability
-			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackwardInitial( outputLexicon, targetNum, sourceNum )
-
+			gamma, alignmentGamma = self.forwardBackward.calculateForwardBackwardInitialBeta( outputLexicon, targetNum, sourceNum )
+			
 			# generate lables from gamma which obtained from baum-welch algorithms
 			lexiconLabel, alignmentLabel, alignmentLabelInitial= self.generator.getLabelFromGamma(alignmentGamma, gamma, sentencePair)
 			

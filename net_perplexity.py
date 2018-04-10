@@ -58,10 +58,10 @@ _process.processBatchWithBaumWelch(_data.getCurrentBatch())
 _process.processPerplexity(_data.getCurrentBatch())
 _process.processBatchWithBaumWelch(_data.getCurrentBatch())
 _process.processPerplexity(_data.getCurrentBatch())
-_process.recordNetwork()
+
 print("hahahahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 
-for i in range(20):
+for i in range(200):
 	_process.processBatchWithBaumWelch(_data.getCurrentBatch())
 	_process.processPerplexity(_data.getCurrentBatch())
 _process.recordNetwork()

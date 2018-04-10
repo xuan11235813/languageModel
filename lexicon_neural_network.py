@@ -265,7 +265,7 @@ class LSTMLexiconNet:
 
         out = tf.add(tf.matmul(hiddenLayer2_, self.weights_out),self.biases_out)
 
-        return out, readyToProcess
+        return out, hiddenLayer2
 
     '''
     def multilayerLSTMNetForOneSentencePlaceholder(self, sequence_batch, _sourceTargetNum):
